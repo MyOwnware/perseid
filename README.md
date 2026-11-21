@@ -18,7 +18,15 @@ Signed arm64-v8a APKs for Android 10 and later will be published on [GitHub Rele
 
 ## Build from source
 
-The Android project and Gradle wrapper are planned for the next phase. Once available, open the repository in Android Studio or run `./gradlew assembleDebug` from the repository root. The x86_64 build is for emulators.
+Use JDK 21 and install Android SDK Platform 37.2 and Build-Tools 36.0.0.
+Set `ANDROID_HOME` to the SDK location or open the project in Android Studio.
+
+```sh
+./gradlew ktlintCheck detekt lint testDebugUnitTest assembleDebug --warning-mode fail
+```
+
+The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`. It opens a
+single Compose screen and supports arm64-v8a devices and x86_64 emulators.
 
 ## Screenshots
 
