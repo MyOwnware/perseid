@@ -18,6 +18,9 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "0.0.1"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     compileOptions {
@@ -29,9 +32,22 @@ android {
         compose = true
     }
 
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+    }
+
+    packaging {
+        jniLibs {
+            // AndroidX ships this library with its debug symbols already stripped.
+            keepDebugSymbols += "**/libandroidx.graphics.path.so"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
     }
