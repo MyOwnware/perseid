@@ -32,7 +32,8 @@ internal fun PerseidTopBar(
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
             .heightIn(min = DesignSize.TouchTarget)
-            .padding(horizontal = DesignSize.Gutter, vertical = DesignSize.Small),
+            .padding(horizontal = DesignSize.Gutter)
+            .padding(top = DesignSize.Small + DesignSize.Section, bottom = DesignSize.Small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
