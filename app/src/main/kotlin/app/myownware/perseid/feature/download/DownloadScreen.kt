@@ -50,11 +50,10 @@ internal fun DownloadScreen(
         MediaSelection(
             state.preview as? PreviewState.Ready,
             model,
-            state.download?.active == true,
             downloadAction { model.controls.start(model.state.value) },
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        DownloadStatus(state.download, model.controls, snackbars)
+        DownloadStatus(state.queue, model.controls, snackbars)
     }
 }
 

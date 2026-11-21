@@ -41,18 +41,15 @@ internal data class DownloadJob(
 
 @Dao
 internal abstract class DownloadDao {
-    @Query("SELECT * FROM downloads ORDER BY createdAt DESC, id DESC LIMIT 1")
-    abstract fun latest(): Flow<DownloadJob?>
+    @Query(
+        """SELECT * FROM downloads WHERE state NOT IN ('Saved', 'Failed', 'Cancelled')
+            OR rowid = (SELECT rowid FROM downloads WHERE state IN ('Saved', 'Failed') ORDER BY rowid DESC LIMIT 1)
+            ORDER BY rowid""",
+    )
+    abstract fun queue(): Flow<List<DownloadJob>>
 
     @Query("SELECT * FROM downloads WHERE id = :id")
     abstract fun observe(id: String): Flow<DownloadJob?>
-
-    @Query(
-        """SELECT EXISTS(
-            SELECT 1 FROM downloads WHERE state IN ('Queued', 'Downloading', 'Publishing', 'Cancelling')
-        )""",
-    )
-    abstract suspend fun hasActive(): Boolean
 
     @Insert
     abstract suspend fun insert(job: DownloadJob)

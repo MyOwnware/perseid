@@ -76,4 +76,8 @@
   <string name="download_notifications_allow">Continue</string>
   <string name="download_notifications_skip">Download without notifications</string>
   <string name="download_interrupted">Download interrupted</string>
+  <plurals name="download_queued_count">
+    <item quantity="one">+%1$d queued</item>
+    <item quantity="other">+%1$d queued</item>
+  </plurals>
 </resources>

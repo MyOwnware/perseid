@@ -76,4 +76,12 @@
   <string name="download_notifications_allow">متابعة</string>
   <string name="download_notifications_skip">التنزيل دون إشعارات</string>
   <string name="download_interrupted">توقّف التنزيل</string>
+  <plurals name="download_queued_count">
+    <item quantity="zero">+%1$d في قائمة الانتظار</item>
+    <item quantity="one">+%1$d في قائمة الانتظار</item>
+    <item quantity="two">+%1$d في قائمة الانتظار</item>
+    <item quantity="few">+%1$d في قائمة الانتظار</item>
+    <item quantity="many">+%1$d في قائمة الانتظار</item>
+    <item quantity="other">+%1$d في قائمة الانتظار</item>
+  </plurals>
 </resources>
