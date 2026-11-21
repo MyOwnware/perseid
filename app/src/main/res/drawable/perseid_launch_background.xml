@@ -1,0 +1,8 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:drawable="@color/perseid_icon_background" />
+  <item
+    android:width="144dp"
+    android:height="144dp"
+    android:drawable="@drawable/perseid_mark"
+    android:gravity="center" />
+</layer-list>
