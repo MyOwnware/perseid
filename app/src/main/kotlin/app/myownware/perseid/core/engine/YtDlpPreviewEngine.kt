@@ -31,8 +31,8 @@ internal class YtDlpPreviewEngine(
             YoutubeDLRequest(url).apply {
                 addOption("--ignore-config")
                 addOption("--no-plugin-dirs")
-            addOption("--no-remote-components")
-            addOption("--no-update")
+                addOption("--no-remote-components")
+                addOption("--no-update")
                 addOption("--no-playlist")
                 addOption("--skip-download")
                 addOption("--no-check-formats")
