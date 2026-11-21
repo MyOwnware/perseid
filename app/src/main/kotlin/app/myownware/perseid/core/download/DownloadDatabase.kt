@@ -79,9 +79,13 @@ internal abstract class DownloadDao {
 
     @Query(
         "UPDATE downloads SET state = 'Queued', retries = 0, error = NULL, finishedAt = NULL " +
-            "WHERE id = :id AND state IN ('Paused', 'Failed') AND error IS NOT 'CannotResume'",
+            "WHERE id = :id AND state IN ('Paused', 'Failed') " +
+            "AND (:restart = (error IS 'CannotResume'))",
     )
-    abstract suspend fun requeue(id: String): Int
+    abstract suspend fun requeue(
+        id: String,
+        restart: Boolean,
+    ): Int
 
     @Query(
         "UPDATE downloads SET state = :state, error = :error, retries = :retries, " +

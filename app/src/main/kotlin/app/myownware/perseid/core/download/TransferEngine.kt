@@ -1,6 +1,9 @@
 package app.myownware.perseid.core.download
 
 import android.content.Context
+import app.myownware.perseid.core.engine.metadataText
+import app.myownware.perseid.core.engine.readMetadata
+import com.fasterxml.jackson.databind.JsonNode
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
@@ -8,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import java.io.File
 import java.io.IOException
+import java.net.URI
 import java.util.Locale
 
 internal data class Progress(
@@ -41,51 +45,143 @@ internal class YtDlpTransferEngine(
     ): File =
         runInterruptible(Dispatchers.IO) {
             val directory = File(job.stagingPath)
-            directory
-                .listFiles()
-                .orEmpty()
-                .singleOrNull { isTrack(it, index) }
-                ?.let { return@runInterruptible it }
-            if (directory.listFiles().orEmpty().any { it.name.startsWith("track-$index.") && it.length() > 0 }) {
-                throw DownloadFailure(DownloadError.CannotResume)
-            }
-            val request = transferRequest(job.url, format, File(directory, "track-$index.%(ext)s"))
-            try {
-                YoutubeDL.init(context)
-                YoutubeDL.execute(request, "${job.id}-$index") { _, _, line ->
-                    parseProgress(line)?.let(progress)
-                }
-            } catch (error: YoutubeDLException) {
-                throw DownloadFailure(classifyDownloadError(error.message.orEmpty()), error)
-            }
-            directory.listFiles().orEmpty().singleOrNull { isTrack(it, index) }
-                ?: throw DownloadFailure(DownloadError.Refused)
+            completedTrack(directory, index) ?: fetchTrack(job, format, index, progress)
         }
+
+    private fun fetchTrack(
+        job: DownloadJob,
+        format: String,
+        index: Int,
+        progress: (Progress) -> Unit,
+    ): File {
+        val directory = File(job.stagingPath)
+        val staged = directory.listFiles().orEmpty().any { it.name.startsWith("track-$index.") && it.length() > 0 }
+        return try {
+            YoutubeDL.init(context)
+            val source = resolveTrack(job, format, index)
+            val file = File(directory, "track-$index.${source.extension}")
+            val http = source.http
+            if (http != null) {
+                checkPartial(file, staged)
+                HttpTransfer(http, file) { requireStorage(context, directory, it) }.download(progress)
+            } else {
+                if (staged) throw DownloadFailure(DownloadError.CannotResume)
+                fetchFragmented(job, format, index, progress)
+            }
+        } catch (failure: YoutubeDLException) {
+            val message = failure.message.orEmpty()
+            val error =
+                if (staged && message.contains("requested format", ignoreCase = true)) {
+                    DownloadError.CannotResume
+                } else {
+                    classifyDownloadError(message)
+                }
+            throw DownloadFailure(error, failure)
+        }
+    }
+
+    private fun resolveTrack(
+        job: DownloadJob,
+        format: String,
+        index: Int,
+    ): ResolvedTrack {
+        val request =
+            baseRequest(job.url, format).apply {
+                addOption("--skip-download")
+                addOption("--no-check-formats")
+                addOption("--dump-single-json")
+            }
+        val metadata = readMetadata(YoutubeDL.execute(request, "${job.id}-$index-metadata").out)
+        return resolveTrack(metadata, format)
+    }
 }
 
-private fun isTrack(
-    file: File,
+private data class ResolvedTrack(
+    val extension: String,
+    val http: HttpSource?,
+)
+
+private fun resolveTrack(
+    metadata: JsonNode,
+    format: String,
+): ResolvedTrack {
+    val selected = metadata.path("formats").firstOrNull { it.metadataText("format_id") == format } ?: metadata
+    val extension =
+        selected.metadataText("ext")?.takeIf { it in MediaExtensions }
+            ?: throw DownloadFailure(DownloadError.Refused)
+    val protocol = selected.metadataText("protocol")
+    val http = if (protocol == "https" || protocol == "http") selected.httpSource(metadata) else null
+    return ResolvedTrack(extension, http)
+}
+
+private fun JsonNode.httpSource(metadata: JsonNode): HttpSource {
+    val uri = metadataText("url")?.let(URI::create)
+    if (uri?.scheme !in setOf("http", "https")) throw DownloadFailure(DownloadError.Refused)
+    val url = requireNotNull(uri).toURL()
+    val headers = path("http_headers").properties().filter { (name, _) -> name in ForwardHeaders }
+    val sourceId = metadata.metadataText("id")
+    val identity = listOf(metadata.metadataText("extractor_key"), sourceId, metadataText("format_id"))
+    return HttpSource(
+        url,
+        path("filesize").asLong(-1).takeIf { it > 0 },
+        identity.joinToString("|"),
+        headers.associate { (name, value) -> name to value.asText() },
+    )
+}
+
+private fun checkPartial(
+    output: File,
+    staged: Boolean,
+) {
+    val partial = File(output.parentFile, "${output.name}.part")
+    if (staged && partial.length() == 0L) throw DownloadFailure(DownloadError.CannotResume)
+}
+
+private fun fetchFragmented(
+    job: DownloadJob,
+    format: String,
     index: Int,
-): Boolean =
-    file.isFile && file.length() > 0 && file.nameWithoutExtension == "track-$index" &&
-        file.extension in MediaExtensions
+    progress: (Progress) -> Unit,
+): File {
+    val directory = File(job.stagingPath)
+    val request = transferRequest(job.url, format, File(directory, "track-$index.%(ext)s"))
+    YoutubeDL.execute(request, "${job.id}-$index") { _, _, line -> parseProgress(line)?.let(progress) }
+    return completedTrack(directory, index) ?: throw DownloadFailure(DownloadError.Refused)
+}
+
+private fun completedTrack(
+    directory: File,
+    index: Int,
+): File? =
+    directory.listFiles().orEmpty().singleOrNull {
+        it.isFile && it.length() > 0 && it.nameWithoutExtension == "track-$index" && it.extension in MediaExtensions
+    }
+
+private val ForwardHeaders = setOf("User-Agent", "Accept", "Accept-Language", "Referer", "Origin")
 
 private fun transferRequest(
     url: String,
     format: String,
     output: File,
 ): YoutubeDLRequest =
-    YoutubeDLRequest(url).apply {
-        for (flag in TransferFlags) addOption(flag)
-        addOption("--format", formatSelector(format))
+    baseRequest(url, format).apply {
         addOption("--output", output.absolutePath)
-        addOption("--socket-timeout", SOCKET_TIMEOUT_SECONDS)
-        addOption("--retries", 0)
         addOption("--fragment-retries", 0)
-        addOption("--extractor-retries", 0)
         addOption("--progress-template", PROGRESS_TEMPLATE)
         addOption("--progress-delta", 1)
         addOption("--fixup", "never")
+    }
+
+private fun baseRequest(
+    url: String,
+    format: String,
+): YoutubeDLRequest =
+    YoutubeDLRequest(url).apply {
+        for (flag in TransferFlags) addOption(flag)
+        addOption("--format", formatSelector(format))
+        addOption("--socket-timeout", SOCKET_TIMEOUT_SECONDS)
+        addOption("--retries", 0)
+        addOption("--extractor-retries", 0)
     }
 
 internal fun formatSelector(format: String): String {

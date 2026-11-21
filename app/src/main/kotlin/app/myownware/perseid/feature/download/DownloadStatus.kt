@@ -88,9 +88,9 @@ private fun DownloadEntry(
         JobState.Failed -> {
             Text(job.title)
             ErrorMessage(stringResource(job.error.message())) {
-                if (job.error != DownloadError.CannotResume) {
-                    SecondaryButton(stringResource(R.string.preview_try_again), { controls.resume(job) })
-                }
+                val restart = job.error == DownloadError.CannotResume
+                val action = if (restart) R.string.download_start_again else R.string.preview_try_again
+                SecondaryButton(stringResource(action), { controls.resume(job, restart) })
                 SecondaryButton(stringResource(R.string.download_cancel_action), { controls.requestCancel(job) })
             }
         }
@@ -165,6 +165,7 @@ private fun JobState.transferState(): TransferState =
 
 private fun DownloadError?.message(): Int =
     when (this) {
+        DownloadError.CannotResume -> R.string.download_resume_blocked
         DownloadError.NoSpace -> R.string.download_no_space
         DownloadError.Offline -> R.string.download_offline
         DownloadError.Refused, DownloadError.Expired -> R.string.download_refused

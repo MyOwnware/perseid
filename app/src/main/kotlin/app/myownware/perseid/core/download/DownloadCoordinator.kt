@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -49,10 +51,19 @@ internal class DownloadCoordinator(
         }
     }
 
-    suspend fun resume(id: String) {
+    suspend fun resume(
+        id: String,
+        restart: Boolean = false,
+    ) {
         withContext(NonCancellable + Dispatchers.IO) {
             database.withTransaction {
-                if (dao.requeue(id) == 1) schedule(id)
+                if (dao.requeue(id, restart) != 1) return@withTransaction
+                try {
+                    if (restart) preserveAttempt(requireNotNull(dao.observe(id).first()))
+                    schedule(id)
+                } catch (_: IOException) {
+                    dao.record(id, JobState.Queued, JobState.Failed, DownloadError.CannotResume, 0)
+                }
             }
         }
     }
@@ -155,3 +166,14 @@ private const val PNG_QUALITY = 100
 internal fun downloadTag(id: String): String = "download:$id"
 
 private const val BACKOFF_SECONDS = 10L
+
+private fun preserveAttempt(job: DownloadJob) {
+    val staging = File(job.stagingPath)
+    val files = staging.listFiles().orEmpty().filter(File::isFile)
+    if (files.isEmpty()) return
+    val archive = File(staging, "previous-${UUID.randomUUID()}")
+    if (!archive.mkdir()) throw IOException()
+    for (file in files) {
+        Files.move(file.toPath(), File(archive, file.name).toPath(), StandardCopyOption.ATOMIC_MOVE)
+    }
+}

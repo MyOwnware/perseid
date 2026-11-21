@@ -19,8 +19,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import java.io.EOFException
 import java.io.File
 import java.io.IOException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 
 internal class DownloadWorker(
     private val context: Context,
@@ -38,7 +41,7 @@ internal class DownloadWorker(
             recordInterrupted(job)
             throw cancelled
         } catch (failure: IOException) {
-            fail(job, (failure as? DownloadFailure)?.error ?: classifyDownloadError(failure.message.orEmpty()))
+            fail(job, failure.downloadError())
         } catch (_: IllegalStateException) {
             fail(job, DownloadError.Unknown)
         } catch (_: SecurityException) {
@@ -185,3 +188,10 @@ private fun storageError(
 }
 
 internal fun queuedCount(jobs: List<DownloadJob>): Int = jobs.count { it.state == JobState.Queued }
+
+private fun IOException.downloadError(): DownloadError =
+    when (this) {
+        is DownloadFailure -> error
+        is EOFException, is SocketException, is SocketTimeoutException -> DownloadError.Transient
+        else -> classifyDownloadError(message.orEmpty())
+    }
