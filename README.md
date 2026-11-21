@@ -7,7 +7,7 @@ Perseid is the first app in MyOwnware. It is planned to keep download history, p
 ## Features
 
 - Paste or share a public media link to preview its thumbnail, title, author and duration when available.
-- Planned — choose Audio or Video and select video quality.
+- Choose Audio or Video from the available formats. Video defaults to the best available quality up to 1080p when available. Audio prefers m4a and otherwise keeps the best available audio format.
 - Planned — download in the background, pause, resume and save to Download/Perseid/.
 - Planned — search, play, share and delete downloads from a local library.
 - Planned — change theme and download defaults and update the engine manually.
@@ -30,7 +30,7 @@ the Download screen and supports arm64-v8a devices and x86_64 emulators.
 
 ## Screenshots
 
-See [preview screenshots](docs/design/) in French and Arabic.
+See [preview and quality selection screenshots](docs/design/) in French and Arabic.
 
 ## License
 
