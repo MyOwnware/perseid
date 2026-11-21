@@ -3,18 +3,23 @@ package app.myownware.perseid.core.download
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.room.withTransaction
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import app.myownware.perseid.core.engine.DownloadRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 
 internal class DownloadCoordinator(
     private val context: Context,
@@ -34,8 +39,51 @@ internal class DownloadCoordinator(
         }
     }
 
+    suspend fun pause(id: String) {
+        changeState(id) { state ->
+            when (state) {
+                JobState.Downloading -> JobState.Pausing
+                JobState.Waiting, JobState.Retrying -> JobState.Paused
+                else -> null
+            }
+        }
+    }
+
+    suspend fun resume(id: String) {
+        withContext(NonCancellable + Dispatchers.IO) {
+            database.withTransaction {
+                if (dao.requeue(id) == 1) schedule(id)
+            }
+        }
+    }
+
     suspend fun cancel(id: String) {
-        if (dao.transition(id, JobState.Queued, JobState.Cancelled) == 0) dao.cancel(id)
+        withContext(NonCancellable + Dispatchers.IO) {
+            database.withTransaction {
+                val job = dao.observe(id).first() ?: return@withTransaction
+                if (!job.canCancel) return@withTransaction
+                when (job.state) {
+                    JobState.Downloading, JobState.Pausing -> {
+                        dao.transition(id, job.state, JobState.Cancelling)
+                    }
+
+                    else -> {
+                        File(job.stagingPath).deleteRecursively()
+                        dao.transition(id, job.state, JobState.Cancelled)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun changeState(
+        id: String,
+        next: (JobState) -> JobState?,
+    ) {
+        database.withTransaction {
+            val current = dao.observe(id).first()?.state ?: return@withTransaction
+            next(current)?.let { dao.transition(id, current, it) }
+        }
     }
 
     private suspend fun enqueue(
@@ -47,21 +95,26 @@ internal class DownloadCoordinator(
         val image = thumbnail?.let { File(context.noBackupFilesDir, "download-thumbnails/$id.png") }
         val job = request.toJob(id, staging, image)
         dao.insert(job)
+        if (image != null) writeThumbnail(image, thumbnail)
+        schedule(job.id)
+    }
+
+    private suspend fun schedule(id: String) {
+        val request =
+            OneTimeWorkRequestBuilder<DownloadWorker>()
+                .addTag(downloadTag(id))
+                .setInputData(workDataOf(DOWNLOAD_ID to id))
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+                .build()
         try {
-            if (image != null) writeThumbnail(image, thumbnail)
-            val work =
-                OneTimeWorkRequestBuilder<DownloadWorker>()
-                    .setId(id)
-                    .setInputData(workDataOf(DOWNLOAD_ID to id.toString()))
-                    .build()
             WorkManager
                 .getInstance(context)
-                .enqueueUniqueWork(DOWNLOAD_QUEUE, ExistingWorkPolicy.APPEND_OR_REPLACE, work)
+                .enqueueUniqueWork(DOWNLOAD_QUEUE, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
                 .result
                 .get()
-        } catch (failure: ExecutionException) {
-            val error = classifyDownloadError(failure.message.orEmpty())
-            dao.finish(job.id, JobState.Failed, error, System.currentTimeMillis())
+        } catch (_: ExecutionException) {
+            dao.record(id, JobState.Queued, JobState.Failed, DownloadError.Unknown, 0)
         }
     }
 }
@@ -98,3 +151,7 @@ private fun writeThumbnail(
 internal const val DOWNLOAD_ID = "download_id"
 private const val DOWNLOAD_QUEUE = "perseid.downloads"
 private const val PNG_QUALITY = 100
+
+internal fun downloadTag(id: String): String = "download:$id"
+
+private const val BACKOFF_SECONDS = 10L

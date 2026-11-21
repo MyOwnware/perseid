@@ -81,4 +81,5 @@
     <item quantity="one">+%1$d en attente</item>
     <item quantity="other">+%1$d en attente</item>
   </plurals>
+  <string name="download_retrying">Nouvelle tentative prévue</string>
 </resources>

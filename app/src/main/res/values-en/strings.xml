@@ -80,4 +80,5 @@
     <item quantity="one">+%1$d queued</item>
     <item quantity="other">+%1$d queued</item>
   </plurals>
+  <string name="download_retrying">Retry scheduled</string>
 </resources>

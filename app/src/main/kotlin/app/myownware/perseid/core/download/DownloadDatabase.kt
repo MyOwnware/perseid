@@ -1,5 +1,7 @@
 package app.myownware.perseid.core.download
 
+import androidx.room.AutoMigration
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -11,9 +13,21 @@ import app.myownware.perseid.core.engine.MediaType
 import app.myownware.perseid.core.engine.TrackMerge
 import kotlinx.coroutines.flow.Flow
 
-internal enum class JobState { Queued, Downloading, Publishing, Cancelling, Saved, Failed, Cancelled, Paused, Waiting }
+internal enum class JobState {
+    Queued,
+    Downloading,
+    Publishing,
+    Cancelling,
+    Saved,
+    Failed,
+    Cancelled,
+    Pausing,
+    Paused,
+    Waiting,
+    Retrying,
+}
 
-internal enum class DownloadError { NoSpace, Offline, Refused, Merge, Save, Unknown }
+internal enum class DownloadError { NoSpace, Offline, Refused, Merge, Save, Unknown, Transient, Expired, CannotResume }
 
 @Entity(tableName = "downloads")
 internal data class DownloadJob(
@@ -34,8 +48,9 @@ internal data class DownloadJob(
     val mimeType: String? = null,
     val finishedAt: Long? = null,
     val error: DownloadError? = null,
+    @ColumnInfo(defaultValue = "0") val retries: Int = 0,
 ) {
-    val canCancel get() = state == JobState.Queued || state == JobState.Downloading
+    val canCancel get() = state !in setOf(JobState.Publishing, JobState.Cancelling, JobState.Saved, JobState.Cancelled)
     val active get() = state in setOf(JobState.Queued, JobState.Downloading, JobState.Publishing, JobState.Cancelling)
 }
 
@@ -43,8 +58,9 @@ internal data class DownloadJob(
 internal abstract class DownloadDao {
     @Query(
         """SELECT * FROM downloads WHERE state NOT IN ('Saved', 'Failed', 'Cancelled')
-            OR rowid = (SELECT rowid FROM downloads WHERE state IN ('Saved', 'Failed') ORDER BY rowid DESC LIMIT 1)
-            ORDER BY rowid""",
+            OR rowid = (SELECT rowid FROM downloads WHERE state = 'Saved' ORDER BY rowid DESC LIMIT 1)
+            OR state = 'Failed'
+            ORDER BY state IN ('Saved', 'Failed'), rowid""",
     )
     abstract fun queue(): Flow<List<DownloadJob>>
 
@@ -61,8 +77,25 @@ internal abstract class DownloadDao {
         next: JobState,
     ): Int
 
-    @Query("UPDATE downloads SET state = 'Cancelling' WHERE id = :id AND state IN ('Queued', 'Downloading')")
-    abstract suspend fun cancel(id: String): Int
+    @Query(
+        "UPDATE downloads SET state = 'Queued', retries = 0, error = NULL, finishedAt = NULL " +
+            "WHERE id = :id AND state IN ('Paused', 'Failed') AND error IS NOT 'CannotResume'",
+    )
+    abstract suspend fun requeue(id: String): Int
+
+    @Query(
+        "UPDATE downloads SET state = :state, error = :error, retries = :retries, " +
+            "speed = NULL, eta = NULL, finishedAt = CASE WHEN :state = 'Failed' " +
+            "THEN CAST(strftime('%s', 'now') AS INTEGER) * 1000 ELSE NULL END " +
+            "WHERE id = :id AND state = :expected",
+    )
+    abstract suspend fun record(
+        id: String,
+        expected: JobState,
+        state: JobState,
+        error: DownloadError?,
+        retries: Int,
+    )
 
     @Query(
         "UPDATE downloads SET progress = :progress, speed = :speed, eta = :eta " +
@@ -85,21 +118,13 @@ internal abstract class DownloadDao {
         mime: String,
         at: Long,
     )
-
-    @Query(
-        "UPDATE downloads SET state = :state, error = :error, finishedAt = :at " +
-            "WHERE id = :id AND (state IN ('Queued', 'Downloading', 'Publishing') " +
-            "OR (state = 'Cancelling' AND :state = 'Cancelled'))",
-    )
-    abstract suspend fun finish(
-        id: String,
-        state: JobState,
-        error: DownloadError?,
-        at: Long?,
-    )
 }
 
-@Database(entities = [DownloadJob::class], version = 1)
+@Database(
+    entities = [DownloadJob::class],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 internal abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloads(): DownloadDao
 }

@@ -50,6 +50,7 @@ internal enum class TransferState(
     Paused(R.string.download_paused),
     Waiting(R.string.download_waiting),
     Interrupted(R.string.download_interrupted),
+    Retrying(R.string.download_retrying),
     Queued(R.string.download_queued),
     Publishing(R.string.download_publishing),
     Cancelling(R.string.download_cancelling),
@@ -150,8 +151,7 @@ private fun DownloadRowActions(
     val state = content.state
     Row {
         if (state != TransferState.Queued) {
-            val active = setOf(TransferState.Downloading, TransferState.Publishing, TransferState.Cancelling)
-            val downloading = state in active
+            val downloading = state != TransferState.Paused
             DownloadIconButton(
                 icon = if (downloading) R.drawable.ic_pause else R.drawable.ic_play_arrow,
                 description = if (downloading) R.string.download_pause_action else R.string.download_resume_action,

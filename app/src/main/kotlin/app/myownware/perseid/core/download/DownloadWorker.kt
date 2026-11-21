@@ -31,27 +31,38 @@ internal class DownloadWorker(
     private val notifications = DownloadNotifications(context)
 
     override suspend fun doWork(): Result {
-        val id = inputData.getString(DOWNLOAD_ID) ?: return Result.failure()
+        val job = inputData.getString(DOWNLOAD_ID)?.let { dao.observe(it).first() } ?: return Result.success()
         return try {
-            if (dao.transition(id, JobState.Queued, JobState.Downloading) == 1) {
-                val job = requireNotNull(dao.observe(id).first())
-                setForeground(notifications.foreground(job, queued = queuedCount(dao.queue().first())))
-                download(job)
-            }
-            Result.success()
+            runJob(job)
         } catch (cancelled: CancellationException) {
-            conclude(id, JobState.Waiting, null)
+            recordInterrupted(job)
             throw cancelled
         } catch (failure: IOException) {
-            fail(id, (failure as? DownloadFailure)?.error ?: classifyDownloadError(failure.message.orEmpty()))
+            fail(job, (failure as? DownloadFailure)?.error ?: classifyDownloadError(failure.message.orEmpty()))
         } catch (_: IllegalStateException) {
-            fail(id, DownloadError.Unknown)
+            fail(job, DownloadError.Unknown)
         } catch (_: SecurityException) {
-            fail(id, DownloadError.Unknown)
+            fail(job, DownloadError.Unknown)
         } catch (_: SQLException) {
-            fail(id, DownloadError.Save)
+            fail(job, DownloadError.Save)
         } finally {
-            withContext(NonCancellable + Dispatchers.IO) { cleanCancelled(id) }
+            withContext(NonCancellable + Dispatchers.IO) { settleUserAction(job.id) }
+        }
+    }
+
+    private suspend fun runJob(job: DownloadJob): Result {
+        if (job.state !in RecoverableStates || dao.transition(job.id, job.state, JobState.Downloading) != 1) {
+            return Result.success()
+        }
+        setForeground(notifications.foreground(job, queued = queuedCount(dao.queue().first())))
+        download(job)
+        return Result.success()
+    }
+
+    private suspend fun recordInterrupted(job: DownloadJob) {
+        withContext(NonCancellable) {
+            val next = if (context.hasConnection()) JobState.Queued else JobState.Waiting
+            dao.transition(job.id, JobState.Downloading, next)
         }
     }
 
@@ -77,7 +88,8 @@ internal class DownloadWorker(
                     }
                 }
             val transfer = async { transferTracks(container.transferEngine, job, { progress.trySend(it) }, ::merge) }
-            val cancellation = async { dao.observe(job.id).first { it?.state == JobState.Cancelling } }
+            val stop = setOf(JobState.Cancelling, JobState.Pausing)
+            val cancellation = async { dao.observe(job.id).first { it?.state in stop } }
             try {
                 select {
                     transfer.onAwait { it }
@@ -135,27 +147,32 @@ internal class DownloadWorker(
         }
 
     private suspend fun fail(
-        id: String,
+        job: DownloadJob,
         error: DownloadError,
     ): Result {
-        conclude(id, JobState.Failed, error)
-        return Result.success()
+        val state = dao.observe(job.id).first()?.state
+        if (state !in setOf(JobState.Downloading, JobState.Publishing)) return Result.success()
+        val outcome = recoveryOutcome(error, context.hasConnection(), job.retries)
+        dao.record(job.id, requireNotNull(state), outcome.state, outcome.error, outcome.retries)
+        return if (outcome.retry) Result.retry() else Result.success()
     }
 
-    private suspend fun conclude(
-        id: String,
-        state: JobState,
-        error: DownloadError?,
-    ) {
-        withContext(NonCancellable) {
-            dao.finish(id, state, error, System.currentTimeMillis().takeUnless { state == JobState.Waiting })
+    private suspend fun settleUserAction(id: String) {
+        val job = dao.observe(id).first() ?: return
+        when (job.state) {
+            JobState.Pausing -> {
+                dao.transition(id, JobState.Pausing, JobState.Paused)
+            }
+
+            JobState.Cancelling -> {
+                File(job.stagingPath).deleteRecursively()
+                dao.transition(id, JobState.Cancelling, JobState.Cancelled)
+            }
+
+            else -> {
+                Unit
+            }
         }
-    }
-
-    private suspend fun cleanCancelled(id: String) {
-        val job = dao.observe(id).first()?.takeIf { it.state == JobState.Cancelling } ?: return
-        File(job.stagingPath).deleteRecursively()
-        dao.finish(id, JobState.Cancelled, null, System.currentTimeMillis())
     }
 }
 

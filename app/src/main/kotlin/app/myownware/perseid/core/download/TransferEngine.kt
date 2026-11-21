@@ -41,6 +41,14 @@ internal class YtDlpTransferEngine(
     ): File =
         runInterruptible(Dispatchers.IO) {
             val directory = File(job.stagingPath)
+            directory
+                .listFiles()
+                .orEmpty()
+                .singleOrNull { isTrack(it, index) }
+                ?.let { return@runInterruptible it }
+            if (directory.listFiles().orEmpty().any { it.name.startsWith("track-$index.") && it.length() > 0 }) {
+                throw DownloadFailure(DownloadError.CannotResume)
+            }
             val request = transferRequest(job.url, format, File(directory, "track-$index.%(ext)s"))
             try {
                 YoutubeDL.init(context)
