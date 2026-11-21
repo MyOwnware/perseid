@@ -11,7 +11,7 @@ permissions:
 jobs:
   android:
     name: Android checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,7 +31,9 @@ jobs:
         with:
           cache-provider: basic
           validate-wrappers: true
-      - name: Install Android SDK platform
-        run: sdkmanager 'platforms;android-37.2' 'build-tools;36.0.0'
+      - name: Verify Android SDK
+        run: |
+          test -f "$ANDROID_HOME/platforms/android-37.2/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/aapt"
       - name: Check and build
         run: ./gradlew ktlintCheck detekt lint testDebugUnitTest assembleDebug --warning-mode fail
