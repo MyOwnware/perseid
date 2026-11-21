@@ -33,6 +33,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -50,7 +52,8 @@ import app.myownware.perseid.core.design.DesignMotion
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.PerseidTopBar
 import app.myownware.perseid.core.locale.AppLanguage
-import app.myownware.perseid.feature.download.DownloadPlaceholder
+import app.myownware.perseid.feature.download.DownloadScreen
+import app.myownware.perseid.feature.download.DownloadViewModel
 import app.myownware.perseid.feature.library.LibraryPlaceholder
 import app.myownware.perseid.feature.settings.SettingsPlaceholder
 
@@ -67,8 +70,17 @@ private enum class Destination(
 internal fun PerseidShell(
     language: AppLanguage,
     onLanguage: (AppLanguage) -> Unit,
+    download: DownloadViewModel,
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
+    val state by download.state.collectAsState()
+    var handledShare by rememberSaveable { mutableStateOf(0) }
+    LaunchedEffect(state.shareRevision) {
+        if (state.shareRevision != handledShare) {
+            destination = Destination.Download
+            handledShare = state.shareRevision
+        }
+    }
     BackHandler(destination != Destination.Download) { destination = Destination.Download }
 
     Scaffold(
@@ -83,7 +95,13 @@ internal fun PerseidShell(
             Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets),
             contentAlignment = Alignment.TopCenter,
         ) {
-            DestinationContent(destination, language, onLanguage, onDownload = { destination = Destination.Download })
+            DestinationContent(
+                destination,
+                language,
+                onLanguage,
+                download,
+                onDownload = { destination = Destination.Download },
+            )
         }
     }
 }
@@ -93,6 +111,7 @@ private fun DestinationContent(
     destination: Destination,
     language: AppLanguage,
     onLanguage: (AppLanguage) -> Unit,
+    download: DownloadViewModel,
     onDownload: () -> Unit,
 ) {
     Column(
@@ -103,7 +122,7 @@ private fun DestinationContent(
             .padding(horizontal = DesignSize.Gutter, vertical = DesignSize.Section),
     ) {
         when (destination) {
-            Destination.Download -> DownloadPlaceholder()
+            Destination.Download -> DownloadScreen(download)
             Destination.Library -> LibraryPlaceholder(onDownload)
             Destination.Settings -> SettingsPlaceholder(language, onLanguage)
         }

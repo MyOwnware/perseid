@@ -4,5 +4,5 @@ import android.app.Application
 import app.myownware.perseid.core.AppContainer
 
 class PerseidApp : Application() {
-    val container = AppContainer()
+    val container by lazy { AppContainer(this) }
 }

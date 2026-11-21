@@ -62,7 +62,7 @@ internal fun formatTransferDetails(
     return context.getString(R.string.download_progress_details, speed, remaining)
 }
 
-private fun formatDuration(
+internal fun formatDuration(
     locale: Locale,
     seconds: Long,
 ): String {

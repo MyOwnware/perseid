@@ -3,8 +3,6 @@
   <string name="download_title">التنزيل</string>
   <string name="library_title">المكتبة</string>
   <string name="settings_title">الإعدادات</string>
-  <string name="download_empty_title">لم يُضف أي رابط</string>
-  <string name="download_empty_description">ستتوفر إضافة الروابط لاحقًا.</string>
   <string name="library_empty_title">لا تنزيلات بعد</string>
   <string name="library_empty_description">ستظهر هنا ملفات الفيديو والصوت المحفوظة.</string>
   <string name="library_open_download">انتقل إلى التنزيل</string>
@@ -41,4 +39,17 @@
   <string name="download_speed">%1$s/ث</string>
   <string name="download_eta">متبقٍّ %1$s</string>
   <string name="download_progress_details">%1$s · %2$s</string>
+  <string name="preview_link_label">رابط الوسائط</string>
+  <string name="preview_paste">لصق</string>
+  <string name="preview_action">معاينة</string>
+  <string name="preview_preparing">جارٍ تجهيز المحرك…</string>
+  <string name="preview_loading">جارٍ تحميل المعاينة…</string>
+  <string name="preview_invalid">أدخل رابطًا يبدأ بـ http:// أو https://.</string>
+  <string name="preview_offline">تحقق من اتصالك ثم حاول مجددًا.</string>
+  <string name="preview_unsupported">هذا الرابط غير مدعوم. جرّب رابطًا آخر.</string>
+  <string name="preview_sign_in">هذا المحتوى خاص أو يتطلب تسجيل الدخول. جرّب رابطًا عامًا.</string>
+  <string name="preview_not_found">لم يُعثر على المحتوى أو تمت إزالته. تحقق من الرابط.</string>
+  <string name="preview_unknown">تعذّر عرض المعاينة.</string>
+  <string name="preview_try_again">حاول مجددًا</string>
+  <string name="preview_metadata_separator">" · "</string>
 </resources>
