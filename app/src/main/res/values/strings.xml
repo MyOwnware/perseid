@@ -3,8 +3,6 @@
   <string name="download_title">Télécharger</string>
   <string name="library_title">Bibliothèque</string>
   <string name="settings_title">Paramètres</string>
-  <string name="download_empty_title">Aucun lien ajouté</string>
-  <string name="download_empty_description">L’ajout de liens sera disponible plus tard.</string>
   <string name="library_empty_title">Aucun téléchargement</string>
   <string name="library_empty_description">Les vidéos et audios enregistrés apparaîtront ici.</string>
   <string name="library_open_download">Aller aux téléchargements</string>
@@ -41,4 +39,17 @@
   <string name="download_speed">%1$s/s</string>
   <string name="download_eta">Encore %1$s</string>
   <string name="download_progress_details">%1$s · %2$s</string>
+  <string name="preview_link_label">Lien du média</string>
+  <string name="preview_paste">Coller</string>
+  <string name="preview_action">Aperçu</string>
+  <string name="preview_preparing">Préparation du moteur…</string>
+  <string name="preview_loading">Chargement de l’aperçu…</string>
+  <string name="preview_invalid">Saisissez un lien commençant par http:// ou https://.</string>
+  <string name="preview_offline">Vérifiez votre connexion, puis réessayez.</string>
+  <string name="preview_unsupported">Ce lien n’est pas pris en charge. Essayez un autre lien.</string>
+  <string name="preview_sign_in">Ce média est privé ou nécessite une connexion. Essayez un lien public.</string>
+  <string name="preview_not_found">Ce média est introuvable ou a été supprimé. Vérifiez le lien.</string>
+  <string name="preview_unknown">Impossible d’afficher l’aperçu.</string>
+  <string name="preview_try_again">Réessayer</string>
+  <string name="preview_metadata_separator">" · "</string>
 </resources>

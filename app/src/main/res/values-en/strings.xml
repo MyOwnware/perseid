@@ -3,8 +3,6 @@
   <string name="download_title">Download</string>
   <string name="library_title">Library</string>
   <string name="settings_title">Settings</string>
-  <string name="download_empty_title">No link added</string>
-  <string name="download_empty_description">Link entry will be available in a later phase.</string>
   <string name="library_empty_title">No downloads yet</string>
   <string name="library_empty_description">Saved video and audio will appear here.</string>
   <string name="library_open_download">Go to Download</string>
@@ -41,4 +39,17 @@
   <string name="download_speed">%1$s/s</string>
   <string name="download_eta">%1$s left</string>
   <string name="download_progress_details">%1$s · %2$s</string>
+  <string name="preview_link_label">Media link</string>
+  <string name="preview_paste">Paste</string>
+  <string name="preview_action">Preview</string>
+  <string name="preview_preparing">Preparing…</string>
+  <string name="preview_loading">Loading preview…</string>
+  <string name="preview_invalid">Enter a link starting with http:// or https://.</string>
+  <string name="preview_offline">Check your internet connection, then try again.</string>
+  <string name="preview_unsupported">This link is unsupported. Try another link.</string>
+  <string name="preview_sign_in">This media is private or requires sign-in. Try a public link.</string>
+  <string name="preview_not_found">This media could not be found or was removed. Check the link.</string>
+  <string name="preview_unknown">Could not load the preview.</string>
+  <string name="preview_try_again">Try again</string>
+  <string name="preview_metadata_separator">" · "</string>
 </resources>
