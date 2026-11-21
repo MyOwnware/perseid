@@ -44,6 +44,7 @@ internal fun DownloadScreen(model: DownloadViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         LinkInput(state.link, model)
         PreviewContent(state.preview, model::requestPreview)
+        MediaSelection(state.preview as? PreviewState.Ready, model)
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         EmptyState(stringResource(R.string.settings_downloads), stringResource(R.string.library_empty_title))
     }

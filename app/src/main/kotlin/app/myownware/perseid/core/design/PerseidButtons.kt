@@ -28,9 +28,11 @@ internal fun PrimaryButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier.heightIn(min = DesignSize.TouchTarget),
         shape = MaterialTheme.shapes.small,
     ) {
@@ -68,6 +70,7 @@ internal fun MediaChoiceControl(
     choice: MediaChoice,
     onChoice: (MediaChoice) -> Unit,
     modifier: Modifier = Modifier,
+    disabledChoice: MediaChoice? = null,
 ) {
     val shape = MaterialTheme.shapes.small
     val outline = MaterialTheme.colorScheme.outline
@@ -76,6 +79,7 @@ internal fun MediaChoiceControl(
             MediaChoiceSegment(
                 option = option,
                 selected = choice == option,
+                enabled = option != disabledChoice,
                 onClick = { onChoice(option) },
                 modifier = Modifier.weight(1f),
             )
@@ -87,14 +91,21 @@ internal fun MediaChoiceControl(
 private fun MediaChoiceSegment(
     option: MediaChoice,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
+    val contentColor =
+        when {
+            selected -> colors.background
+            enabled -> colors.onSurface
+            else -> colors.onSurface.copy(alpha = 0.38f)
+        }
     Surface(
         color = if (selected) colors.onSurface else colors.background,
-        contentColor = if (selected) colors.background else colors.onSurface,
-        modifier = modifier.selectable(selected, role = Role.RadioButton, onClick = onClick),
+        contentColor = contentColor,
+        modifier = modifier.selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
     ) {
         Box(
             modifier = Modifier.heightIn(min = DesignSize.TouchTarget).padding(DesignSize.Small),
