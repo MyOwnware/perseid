@@ -1,4 +1,4 @@
-Material Symbols Outlined (download, video_library, settings)
+Material Symbols Outlined (download, video_library, settings, chevron_right, pause, play_arrow, close, movie)
 Copyright Google LLC
 https://github.com/google/material-design-icons/tree/10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7
 Converted from SVG to Android VectorDrawable.
