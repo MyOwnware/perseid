@@ -15,7 +15,10 @@
     android:fullBackupContent="@xml/backup_rules"
     android:icon="@mipmap/ic_launcher"
     android:label="@string/app_name"
-    android:theme="@style/Theme.Perseid">
+    android:localeConfig="@xml/locales_config"
+    android:supportsRtl="true"
+    android:theme="@style/Theme.Perseid"
+    tools:targetApi="33">
     <activity
       android:name=".MainActivity"
       android:exported="true">
