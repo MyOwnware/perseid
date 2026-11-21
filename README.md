@@ -39,3 +39,7 @@ Perseid is licensed under [GPL-3.0](LICENSE). See [engine notices and source lin
 ## Use
 
 Perseid is for personal use with media you are allowed to download. Respect copyright and each site's terms.
+
+## Known limitations
+
+- Instagram: many posts require sign-in. Perseid works with posts the site makes accessible without signing in.

@@ -155,6 +155,7 @@ private fun PreviewProblem(
             PreviewError.Offline -> R.string.preview_offline
             PreviewError.Unsupported -> R.string.preview_unsupported
             PreviewError.SignIn -> R.string.preview_sign_in
+            PreviewError.InstagramSignIn -> R.string.preview_instagram_sign_in
             PreviewError.NotFound -> R.string.preview_not_found
             PreviewError.Unknown -> R.string.preview_unknown
         }

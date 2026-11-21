@@ -48,6 +48,7 @@
   <string name="preview_offline">تحقق من اتصالك ثم حاول مجددًا.</string>
   <string name="preview_unsupported">هذا الرابط غير مدعوم. جرّب رابطًا آخر.</string>
   <string name="preview_sign_in">هذا المحتوى خاص أو يتطلب تسجيل الدخول. جرّب رابطًا عامًا.</string>
+  <string name="preview_instagram_sign_in">يتطلب هذا المنشور تسجيل الدخول، لذا لا يمكن لتطبيق Perseid حفظه.</string>
   <string name="preview_not_found">لم يُعثر على المحتوى أو تمت إزالته. تحقق من الرابط.</string>
   <string name="preview_unknown">تعذّر عرض المعاينة.</string>
   <string name="preview_try_again">حاول مجددًا</string>
