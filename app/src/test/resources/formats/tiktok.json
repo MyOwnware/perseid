@@ -1,0 +1,84 @@
+{
+  "formats": [
+    {
+      "format_id": "h264_540p_992286-0",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1307586
+    },
+    {
+      "format_id": "h264_540p_992286-1",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1307586
+    },
+    {
+      "format_id": "h264_540p_1376802-0",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1814281
+    },
+    {
+      "format_id": "h264_540p_1376802-1",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1814281
+    },
+    {
+      "format_id": "h264_540p_2240963-0",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 2953029
+    },
+    {
+      "format_id": "h264_540p_2240963-1",
+      "ext": "mp4",
+      "vcodec": "h264",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 2953029
+    },
+    {
+      "format_id": "bytevc1_540p_1297374-0",
+      "ext": "mp4",
+      "vcodec": "h265",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1728265
+    },
+    {
+      "format_id": "bytevc1_540p_1297374-1",
+      "ext": "mp4",
+      "vcodec": "h265",
+      "acodec": "aac",
+      "height": 1024,
+      "filesize": 1728265
+    },
+    {
+      "format_id": "bytevc1_720p_1504834-0",
+      "ext": "mp4",
+      "vcodec": "h265",
+      "acodec": "aac",
+      "height": 1280,
+      "filesize": 2004627
+    },
+    {
+      "format_id": "bytevc1_720p_1504834-1",
+      "ext": "mp4",
+      "vcodec": "h265",
+      "acodec": "aac",
+      "height": 1280,
+      "filesize": 2004627
+    }
+  ]
+}
