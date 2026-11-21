@@ -7,7 +7,16 @@ junit = "4.13.2"
 ktlint = "1.8.0"
 detekt = "1.23.8"
 
+youtubedl = "0.18.1"
+jackson = "2.23.0"
+commons-compress = "1.28.0"
+commons-io = "2.22.0"
+
 [libraries]
+youtubedl = { module = "io.github.junkfood02.youtubedl-android:library", version.ref = "youtubedl" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-material3 = { module = "androidx.compose.material3:material3" }

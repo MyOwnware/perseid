@@ -46,6 +46,9 @@ android {
 
     packaging {
         jniLibs {
+            // The engine starts its bundled executables through the native library directory.
+            useLegacyPackaging = true
+            keepDebugSymbols += setOf("**/libpython.so", "**/libpython.zip.so", "**/libqjs.so")
             // AndroidX ships this library with its debug symbols already stripped.
             keepDebugSymbols += "**/libandroidx.graphics.path.so"
         }
@@ -55,12 +58,18 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
 
 dependencies {
+    implementation(libs.youtubedl) {
+        exclude(group = "androidx.appcompat", module = "appcompat")
+    }
+    implementation(libs.jackson.databind)
+    implementation(libs.commons.compress)
+    implementation(libs.commons.io)
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)
     implementation(libs.compose.material3)

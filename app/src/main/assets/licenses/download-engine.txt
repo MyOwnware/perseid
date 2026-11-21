@@ -1,0 +1,35 @@
+Download preview engine
+
+youtubedl-android 0.18.1, library and common
+GNU General Public License version 3
+Corresponding wrapper source and license:
+https://github.com/yausername/youtubedl-android/tree/0.18.1
+https://github.com/yausername/youtubedl-android/blob/0.18.1/LICENSE
+
+yt-dlp 2025.11.12, lazy extractor build bundled by youtubedl-android
+Unlicense for yt-dlp upstream code. Bundled code has additional notices.
+Source and build configuration:
+https://github.com/yt-dlp/yt-dlp/tree/335653be82d5ef999cfc2879d005397402eebec1
+https://github.com/yt-dlp/yt-dlp/releases/tag/2025.11.12
+https://github.com/xibr/ytdlp-lazy
+
+yt-dlp-ejs 0.3.1
+Unlicense for the upstream project. The bundled solver includes third-party code.
+https://github.com/yt-dlp/ejs/tree/0.3.1
+
+QuickJS 2025-04-26
+MIT
+https://bellard.org/quickjs/quickjs-2025-04-26.tar.xz
+
+Python 3.12.11 and its bundled native libraries
+Python Software Foundation License version 2 and companion library licenses
+https://github.com/python/cpython/tree/v3.12.11
+https://github.com/yausername/youtubedl-android/blob/0.18.1/BUILD_PYTHON.md
+
+Jackson and Apache Commons
+Apache License version 2.0
+https://github.com/FasterXML/jackson/wiki/Jackson-Release-2.23
+https://commons.apache.org/proper/commons-compress/
+https://commons.apache.org/proper/commons-io/
+https://commons.apache.org/proper/commons-codec/
+https://commons.apache.org/proper/commons-lang/
