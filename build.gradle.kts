@@ -41,5 +41,5 @@ tasks.register<JavaExec>("detekt") {
     description = "Analyze the app Kotlin source."
     classpath = detektCli
     mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
-    args("--input", "app/src")
+    args("--input", "app/src", "--build-upon-default-config", "--config", "config/detekt.yml")
 }
