@@ -88,3 +88,7 @@ Each implementation phase starts from up-to-date main. Use small signed commits 
 | 8 Library and player | `phase/08-library-player` | Add library filters and search → local player → delete/share and missing-file behavior. | v0.2.0 |
 | 9 Settings and engine update | `phase/09-settings-engine-update` | Store preferences → add About, Privacy and licenses → verify manual update and recovery. | v0.3.0 |
 | 10 Polish | `phase/10-polish` | Review binaries and privacy → check devices, accessibility, recovery and performance → update screenshots and release documentation. | v1.0.0 |
+
+### Phase 4 Download screen order
+
+Link field → preview → Video/Audio → quality list → Download button → downloads list (active + queued) at the bottom.
