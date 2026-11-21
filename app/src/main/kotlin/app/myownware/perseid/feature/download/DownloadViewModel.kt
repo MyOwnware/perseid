@@ -2,7 +2,10 @@ package app.myownware.perseid.feature.download
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.myownware.perseid.core.engine.DownloadRequest
+import app.myownware.perseid.core.engine.MediaOption
 import app.myownware.perseid.core.engine.MediaPreview
+import app.myownware.perseid.core.engine.MediaType
 import app.myownware.perseid.core.engine.PreviewEngine
 import app.myownware.perseid.core.engine.PreviewError
 import app.myownware.perseid.core.engine.PreviewFailure
@@ -19,7 +22,21 @@ internal data class DownloadUiState(
     val link: String = "",
     val preview: PreviewState = PreviewState.Empty,
     val shareRevision: Int = 0,
-)
+) {
+    fun downloadRequest(): DownloadRequest? {
+        val ready = preview as? PreviewState.Ready ?: return null
+        return ready.selectedOption?.let { option ->
+            DownloadRequest(
+                ready.url,
+                ready.type,
+                option.formatIds,
+                ready.media.title,
+                ready.media.thumbnailUrl,
+                option.requiresFfmpeg,
+            )
+        }
+    }
+}
 
 internal sealed interface PreviewState {
     data object Empty : PreviewState
@@ -32,7 +49,17 @@ internal sealed interface PreviewState {
 
     data class Ready(
         val media: MediaPreview,
-    ) : PreviewState
+        val url: String,
+        val videoIndex: Int = defaultVideoIndex(media.options.video),
+        val type: MediaType = if (videoIndex < 0 && media.options.audio != null) MediaType.Audio else MediaType.Video,
+    ) : PreviewState {
+        val selectedOption: MediaOption?
+            get() =
+                when (type) {
+                    MediaType.Video -> media.options.video.getOrNull(videoIndex)
+                    MediaType.Audio -> media.options.audio
+                }
+    }
 
     data class Failed(
         val error: PreviewError,
@@ -71,6 +98,24 @@ internal class DownloadViewModel(
         publish(PreviewState.Empty)
     }
 
+    fun selectType(type: MediaType) {
+        val ready = state.value.preview as? PreviewState.Ready ?: return
+        val options = ready.media.options
+        val available =
+            when (type) {
+                MediaType.Video -> options.video.isNotEmpty()
+                MediaType.Audio -> options.audio != null
+            }
+        if (available) publish(ready.copy(type = type))
+    }
+
+    fun selectVideo(index: Int) {
+        val ready = state.value.preview as? PreviewState.Ready ?: return
+        if (ready.type == MediaType.Video && index in ready.media.options.video.indices) {
+            publish(ready.copy(videoIndex = index))
+        }
+    }
+
     fun requestPreview() {
         request?.cancel()
         val url = validatedLink(state.value.link)
@@ -78,13 +123,14 @@ internal class DownloadViewModel(
             publish(PreviewState.Invalid)
             return
         }
+        publish(PreviewState.Loading)
         request = (scope ?: viewModelScope).launch { load(url) }
     }
 
     private suspend fun load(url: String) {
         try {
             val preview = withTimeout(PREVIEW_TIMEOUT_MILLIS) { fetch(url) }
-            publish(PreviewState.Ready(preview))
+            publish(PreviewState.Ready(preview, url))
         } catch (_: TimeoutCancellationException) {
             publish(PreviewState.Failed(PreviewError.Unknown))
         } catch (cancelled: CancellationException) {
@@ -112,5 +158,17 @@ internal class DownloadViewModel(
 
     private companion object {
         const val PREVIEW_TIMEOUT_MILLIS = 30_000L
+    }
+}
+
+internal const val DEFAULT_VIDEO_HEIGHT = 1080
+
+private fun defaultVideoIndex(options: List<MediaOption>): Int {
+    val lowestKnown = options.indexOfLast { it.height != null }
+    val withinLimit = options.indexOfFirst { it.height != null && it.height <= DEFAULT_VIDEO_HEIGHT }
+    return when {
+        withinLimit >= 0 -> withinLimit
+        lowestKnown >= 0 -> lowestKnown
+        else -> options.lastIndex
     }
 }
