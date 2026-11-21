@@ -48,6 +48,7 @@
   <string name="preview_offline">Vérifiez votre connexion, puis réessayez.</string>
   <string name="preview_unsupported">Ce lien n’est pas pris en charge. Essayez un autre lien.</string>
   <string name="preview_sign_in">Ce média est privé ou nécessite une connexion. Essayez un lien public.</string>
+  <string name="preview_instagram_sign_in">Il faut se connecter pour voir cette publication. Perseid ne peut pas l’enregistrer.</string>
   <string name="preview_not_found">Ce média est introuvable ou a été supprimé. Vérifiez le lien.</string>
   <string name="preview_unknown">Impossible d’afficher l’aperçu.</string>
   <string name="preview_try_again">Réessayer</string>

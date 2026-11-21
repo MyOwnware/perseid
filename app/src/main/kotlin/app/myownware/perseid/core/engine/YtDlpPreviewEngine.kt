@@ -7,6 +7,7 @@ import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import org.json.JSONObject
+import java.net.URI
 import java.util.UUID
 
 internal class YtDlpPreviewEngine(
@@ -45,7 +46,8 @@ internal class YtDlpPreviewEngine(
             try {
                 YoutubeDL.execute(request, UUID.randomUUID().toString())
             } catch (failure: YoutubeDLException) {
-                throw PreviewFailure(classifyPreviewError(failure.message.orEmpty()), failure)
+                val error = classifyPreviewError(failure.message.orEmpty(), URI.create(url).host)
+                throw PreviewFailure(error, failure)
             }
         return JSONObject(response.out)
     }

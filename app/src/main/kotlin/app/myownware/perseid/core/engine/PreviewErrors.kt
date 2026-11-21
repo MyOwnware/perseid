@@ -1,6 +1,9 @@
 package app.myownware.perseid.core.engine
 
-internal fun classifyPreviewError(message: String): PreviewError {
+internal fun classifyPreviewError(
+    message: String,
+    host: String? = null,
+): PreviewError {
     val text = message.lowercase()
     val signIn = listOf("private", "sign in", "log in", "login required", "members-only")
     return when {
@@ -15,11 +18,16 @@ internal fun classifyPreviewError(message: String): PreviewError {
 
         listOf("unsupported url", "no suitable extractor").any(text::contains) -> PreviewError.Unsupported
 
-        signIn.any(text::contains) -> PreviewError.SignIn
+        signIn.any(text::contains) -> if (isInstagram(host)) PreviewError.InstagramSignIn else PreviewError.SignIn
 
         listOf("404", "not found", "has been removed", "no longer available", "video unavailable")
             .any(text::contains) -> PreviewError.NotFound
 
         else -> PreviewError.Unknown
     }
+}
+
+private fun isInstagram(host: String?): Boolean {
+    val domain = host?.lowercase()
+    return domain == "instagram.com" || domain?.endsWith(".instagram.com") == true || domain == "instagr.am"
 }

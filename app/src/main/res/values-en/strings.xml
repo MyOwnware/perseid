@@ -48,6 +48,7 @@
   <string name="preview_offline">Check your internet connection, then try again.</string>
   <string name="preview_unsupported">This link is unsupported. Try another link.</string>
   <string name="preview_sign_in">This media is private or requires sign-in. Try a public link.</string>
+  <string name="preview_instagram_sign_in">This post requires signing in, so Perseid can\'t save it.</string>
   <string name="preview_not_found">This media could not be found or was removed. Check the link.</string>
   <string name="preview_unknown">Could not load the preview.</string>
   <string name="preview_try_again">Try again</string>

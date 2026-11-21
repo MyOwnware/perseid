@@ -19,6 +19,7 @@ internal enum class PreviewError {
     Offline,
     Unsupported,
     SignIn,
+    InstagramSignIn,
     NotFound,
     Unknown,
 }
