@@ -23,6 +23,14 @@ internal class DownloadControls(
         scope().launch { downloads?.start(request, thumbnail) }
     }
 
+    fun pause(job: DownloadJob) {
+        scope().launch { downloads?.pause(job.id) }
+    }
+
+    fun resume(job: DownloadJob) {
+        scope().launch { downloads?.resume(job.id) }
+    }
+
     fun requestCancel(job: DownloadJob) {
         if (!job.canCancel || pending.value != null) return
         pendingCancel.value = job.id

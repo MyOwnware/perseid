@@ -87,11 +87,16 @@ private fun DownloadEntry(
 
         JobState.Failed -> {
             Text(job.title)
-            ErrorMessage(stringResource(job.error.message())) {}
+            ErrorMessage(stringResource(job.error.message())) {
+                if (job.error != DownloadError.CannotResume) {
+                    SecondaryButton(stringResource(R.string.preview_try_again), { controls.resume(job) })
+                }
+                SecondaryButton(stringResource(R.string.download_cancel_action), { controls.requestCancel(job) })
+            }
         }
 
         else -> {
-            ActiveDownload(job, pending == job.id) { controls.requestCancel(job) }
+            ActiveDownload(job, pending == job.id, controls)
         }
     }
 }
@@ -100,7 +105,7 @@ private fun DownloadEntry(
 private fun ActiveDownload(
     job: DownloadJob,
     cancelling: Boolean,
-    onCancel: () -> Unit,
+    controls: DownloadControls,
 ) {
     val bitmap by produceState<Bitmap?>(null, job.thumbnailPath) {
         value = withContext(Dispatchers.IO) { job.thumbnailPath?.let(BitmapFactory::decodeFile) }
@@ -116,11 +121,13 @@ private fun ActiveDownload(
                 job.progress.toFloat() / MAX_PERCENT,
                 metrics,
                 thumbnail,
-                toggleEnabled = false,
+                toggleEnabled = !cancelling && job.state in ToggleStates,
                 cancelEnabled = job.canCancel && !cancelling,
             ),
-        onToggle = {},
-        onCancel = onCancel,
+        onToggle = {
+            if (job.state == JobState.Paused) controls.resume(job) else controls.pause(job)
+        },
+        onCancel = { controls.requestCancel(job) },
     )
 }
 
@@ -149,7 +156,9 @@ private fun JobState.transferState(): TransferState =
         JobState.Downloading -> TransferState.Downloading
         JobState.Publishing -> TransferState.Publishing
         JobState.Paused -> TransferState.Paused
-        JobState.Waiting -> TransferState.Interrupted
+        JobState.Waiting -> TransferState.Waiting
+        JobState.Pausing -> TransferState.Paused
+        JobState.Retrying -> TransferState.Retrying
         JobState.Cancelling -> TransferState.Cancelling
         else -> TransferState.Queued
     }
@@ -158,8 +167,10 @@ private fun DownloadError?.message(): Int =
     when (this) {
         DownloadError.NoSpace -> R.string.download_no_space
         DownloadError.Offline -> R.string.download_offline
-        DownloadError.Refused -> R.string.download_refused
+        DownloadError.Refused, DownloadError.Expired -> R.string.download_refused
         DownloadError.Merge -> R.string.download_merge_failed
         DownloadError.Save -> R.string.download_save_failed
         else -> R.string.download_failed
     }
+
+private val ToggleStates = setOf(JobState.Downloading, JobState.Paused, JobState.Waiting, JobState.Retrying)

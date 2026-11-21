@@ -84,4 +84,5 @@
     <item quantity="many">+%1$d في قائمة الانتظار</item>
     <item quantity="other">+%1$d في قائمة الانتظار</item>
   </plurals>
+  <string name="download_retrying">ستتم إعادة المحاولة</string>
 </resources>
