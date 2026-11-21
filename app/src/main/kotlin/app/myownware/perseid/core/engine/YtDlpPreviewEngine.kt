@@ -6,7 +6,6 @@ import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
-import org.json.JSONObject
 import java.net.URI
 import java.util.UUID
 
@@ -18,16 +17,19 @@ internal class YtDlpPreviewEngine(
     }
 
     override suspend fun preview(url: String): MediaPreview {
-        val metadata = runInterruptible(Dispatchers.IO) { extractMetadata(url) }
+        val metadata = runInterruptible(Dispatchers.IO) { readMetadata(extractMetadata(url)) }
+        val thumbnailUrl = metadata.metadataText("thumbnail")
         return MediaPreview(
-            title = metadata.nonEmpty("title") ?: throw PreviewFailure(PreviewError.Unknown),
-            author = metadata.nonEmpty("uploader") ?: metadata.nonEmpty("channel"),
-            durationSeconds = metadata.optLong("duration", -1).takeIf { it >= 0 },
-            thumbnail = metadata.nonEmpty("thumbnail")?.let { loadThumbnail(it) },
+            title = metadata.metadataText("title") ?: throw PreviewFailure(PreviewError.Unknown),
+            author = metadata.metadataText("uploader") ?: metadata.metadataText("channel"),
+            durationSeconds = metadata.path("duration").asLong(-1).takeIf { it >= 0 },
+            thumbnail = thumbnailUrl?.let { loadThumbnail(it) },
+            thumbnailUrl = thumbnailUrl,
+            options = metadata.mediaOptions(),
         )
     }
 
-    private fun extractMetadata(url: String): JSONObject {
+    private fun extractMetadata(url: String): String {
         val request =
             YoutubeDLRequest(url).apply {
                 addOption("--ignore-config")
@@ -49,10 +51,8 @@ internal class YtDlpPreviewEngine(
                 val error = classifyPreviewError(failure.message.orEmpty(), URI.create(url).host)
                 throw PreviewFailure(error, failure)
             }
-        return JSONObject(response.out)
+        return response.out
     }
-
-    private fun JSONObject.nonEmpty(key: String): String? = optString(key).takeUnless { isNull(key) || it.isBlank() }
 
     private companion object {
         const val SOCKET_TIMEOUT_SECONDS = 12

@@ -13,6 +13,8 @@ internal data class MediaPreview(
     val author: String? = null,
     val durationSeconds: Long? = null,
     val thumbnail: Bitmap? = null,
+    val thumbnailUrl: String? = null,
+    val options: MediaOptions = MediaOptions(),
 )
 
 internal enum class PreviewError {
