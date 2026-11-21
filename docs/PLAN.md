@@ -15,7 +15,7 @@ Compose screens → ViewModels → immutable UI state via StateFlow
                        ↓
               Room + DataStore
                        ↑
-    WorkManager → youtubedl-android → yt-dlp + FFmpeg
+    WorkManager → youtubedl-android → yt-dlp → Android MediaMuxer
                        ↓
               MediaStore Downloads → Media3 / Android share sheet
 ```
@@ -40,7 +40,6 @@ Upstream stable versions checked on 2026-11-21. These are reference versions. Ap
 | WorkManager / Media3 | Background scheduling / local playback | [2.12.0 / 1.11.1](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | youtubedl-android | Android engine wrapper and native artifacts | [0.18.1](https://github.com/yausername/youtubedl-android/releases/tag/0.18.1) | [GPL-3.0](https://github.com/yausername/youtubedl-android/blob/0.18.1/LICENSE) |
 | yt-dlp | Extractors and transfers | [2026.10.26](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26) | Unlicense for upstream code. Bundled code has additional terms. |
-| FFmpeg | Merge tracks and remux as needed | [9.1 upstream](https://ffmpeg.org/download.html) | LGPL-2.1-or-later or GPL depending on the build. |
 | ktlint / detekt | Kotlin formatting and static analysis | [1.8.0](https://github.com/ktlint/ktlint/releases/tag/1.8.0) / [1.23.8](https://github.com/detekt/detekt/releases/tag/v1.23.8) | MIT / Apache-2.0 |
 
 ## Screens and local data
@@ -68,7 +67,7 @@ Verify HTTP range and fragment transfers with controlled fixtures and byte or fr
 - Extractors break when sites change. Test representative public, authorized links and offer a manual update in Phase 9. Audit the wrapper's JavaScript runtime and yt-dlp EJS for YouTube before promising support. Review update integrity, keep a working fallback and avoid changing engines during an active job. [yt-dlp documentation](https://github.com/yt-dlp/yt-dlp)
 - Native binaries dominate size. Measure download and installed size per ABI and the peak storage needed for staging and export. Publish only arm64-v8a. Test x86_64 on emulators and verify 16 KB page compatibility.
 - Use app-owned MediaStore Downloads entries with minSdk 29. Avoid broad storage permissions. Share with URI grants and handle files removed outside the app. Test foreground worker behavior and Android 16 job quotas before release. [MediaStore](https://developer.android.com/training/data-storage/shared/media) · [Long-running workers](https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running)
-- GPL-3.0 is compatible with the wrapper, yt-dlp upstream and redistributable FFmpeg builds under compatible terms. Audit the exact binaries, including FFmpeg build flags and third-party code. Ship notices and provide corresponding source and build scripts alongside the APK or by equivalent access. Reject FFmpeg builds configured with nonfree components. Reassess prebuilt FFmpeg before 1.0.0. [FFmpeg licensing](https://ffmpeg.org/legal.html) · [GPL FAQ](https://www.gnu.org/licenses/gpl-faq.en.html)
+- Audit the exact bundled binaries and third-party code. Ship notices and provide corresponding source and build scripts where required. Use Android MediaMuxer for MP4 and WebM as recorded in [ADR 0006](adr/0006-platform-muxing.md).
 - Site support and permission to download are separate. Describe the app as intended for personal use with media the user is allowed to download. Respect copyright and site terms. Keep DRM and access-control bypass out of scope. [YouTube terms](https://www.youtube.com/t/terms)
 
 ## Phases
@@ -83,7 +82,8 @@ Each implementation phase starts from up-to-date main. Use small signed commits 
 | 3 Design system and icon | `phase/03-design-system` | Confirm theme → add typography, colors and controls → adapt supplied vector icon with background, foreground and monochrome. Check scaling and contrast in both themes. | |
 | 4 Link and preview | `phase/04-link-preview` | Handle paste and share → add engine metadata and preview → test bad links, missing fields and representative sites. | |
 | 5 Audio, Video and quality | `phase/05-quality-selection` | Map formats → add quality UI and defaults → test ranking, missing sizes and audio fallback. | |
-| 6 Download and resume | `phase/06-download-resume` | Persist jobs and schedule one worker → wire transfer controls → publish and share → exercise the resume and interruption matrix. | |
+| 6a Download core | `phase/06a-download-core` | Persist jobs and run one foreground worker → merge compatible tracks → publish and share → verify transfers and playback. | |
+| 6b Download and resume | `phase/06-download-resume` | Add queue, pause, resume and recovery → exercise the interruption matrix. | |
 | 7 Release pipeline | `phase/07-release-pipeline` | Build signed arm64 APKs on owner-created vX.Y.Z tags → add checksums, notices, source links and notes → verify the artifact and an install. | v0.1.0 |
 | 8 Library and player | `phase/08-library-player` | Add library filters and search → local player → delete/share and missing-file behavior. | v0.2.0 |
 | 9 Settings and engine update | `phase/09-settings-engine-update` | Store preferences → add About, Privacy and licenses → verify manual update and recovery. | v0.3.0 |
