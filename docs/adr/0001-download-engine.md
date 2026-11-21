@@ -1,5 +1,7 @@
 # 0001 — Download engine
 
+Superseded in part by [ADR 0006](0006-platform-muxing.md).
+
 ## Context
 
 Perseid needs site extraction, media transfer and track merging on Android.
