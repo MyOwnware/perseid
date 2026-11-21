@@ -34,7 +34,6 @@ import app.myownware.perseid.core.locale.formatVideoResolution
 internal fun MediaSelection(
     preview: PreviewState.Ready?,
     model: DownloadViewModel,
-    active: Boolean,
     onDownload: () -> Unit,
 ) {
     val type = preview?.type ?: MediaType.Video
@@ -56,7 +55,7 @@ internal fun MediaSelection(
     val label = if (type == MediaType.Video) R.string.download_video else R.string.download_audio
     PrimaryButton(
         label = stringResource(label),
-        enabled = preview?.selectedOption != null && !active,
+        enabled = preview?.selectedOption != null,
         onClick = onDownload,
     )
 }

@@ -35,12 +35,15 @@ internal class DownloadNotifications(
     fun foreground(
         job: DownloadJob,
         progress: Progress? = null,
+        queued: Int = 0,
     ): ForegroundInfo {
         val local = localizedContext(context)
         val text = progress?.let { progressText(local, it) } ?: local.getString(R.string.download_running)
+        val queueLabel = local.resources.getQuantityString(R.plurals.download_queued_count, queued, queued)
         val notification =
             builder(local, job.title)
                 .setContentText(text)
+                .setSubText(queueLabel.takeIf { queued > 0 })
                 .setProgress(MAX_PERCENT, progress?.percent ?: 0, progress == null)
                 .setOnlyAlertOnce(true)
                 .setOngoing(true)

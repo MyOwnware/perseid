@@ -25,7 +25,7 @@ internal data class DownloadUiState(
     val link: String = "",
     val preview: PreviewState = PreviewState.Empty,
     val shareRevision: Int = 0,
-    val download: DownloadJob? = null,
+    val queue: List<DownloadJob> = emptyList(),
 ) {
     fun downloadRequest(): DownloadRequest? {
         val ready = preview as? PreviewState.Ready ?: return null
@@ -85,7 +85,7 @@ internal class DownloadViewModel(
     init {
         if (downloads != null) {
             (scope ?: viewModelScope).launch {
-                downloads.latest.collect { job -> mutableState.update { it.copy(download = job) } }
+                downloads.queue.collect { jobs -> mutableState.update { it.copy(queue = jobs) } }
             }
         }
     }

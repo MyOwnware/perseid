@@ -3,6 +3,7 @@ package app.myownware.perseid.core.download
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.room.withTransaction
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -20,7 +21,7 @@ internal class DownloadCoordinator(
     private val database: DownloadDatabase,
 ) {
     private val dao = database.downloads()
-    val latest = dao.latest()
+    val queue = dao.queue()
 
     suspend fun start(
         request: DownloadRequest,
@@ -28,13 +29,13 @@ internal class DownloadCoordinator(
     ) {
         withContext(NonCancellable + Dispatchers.IO) {
             database.withTransaction {
-                if (!dao.hasActive()) enqueue(request, thumbnail)
+                enqueue(request, thumbnail)
             }
         }
     }
 
     suspend fun cancel(id: String) {
-        dao.cancel(id)
+        if (dao.transition(id, JobState.Queued, JobState.Cancelled) == 0) dao.cancel(id)
     }
 
     private suspend fun enqueue(
@@ -55,7 +56,7 @@ internal class DownloadCoordinator(
                     .build()
             WorkManager
                 .getInstance(context)
-                .enqueue(work)
+                .enqueueUniqueWork(DOWNLOAD_QUEUE, ExistingWorkPolicy.APPEND_OR_REPLACE, work)
                 .result
                 .get()
         } catch (failure: ExecutionException) {
@@ -95,4 +96,5 @@ private fun writeThumbnail(
 }
 
 internal const val DOWNLOAD_ID = "download_id"
+private const val DOWNLOAD_QUEUE = "perseid.downloads"
 private const val PNG_QUALITY = 100

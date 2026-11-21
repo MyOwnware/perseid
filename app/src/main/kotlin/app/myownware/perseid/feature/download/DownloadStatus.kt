@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,7 +46,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun DownloadStatus(
-    job: DownloadJob?,
+    jobs: List<DownloadJob>,
     controls: DownloadControls,
     snackbars: SnackbarHostState,
 ) {
@@ -59,30 +60,38 @@ internal fun DownloadStatus(
             if (result == SnackbarResult.ActionPerformed) controls.undoCancel()
         }
     }
-    LaunchedEffect(job?.id, job?.state) {
-        if (job != null && job.state != JobState.Cancelled) requester.bringIntoView()
+    LaunchedEffect(jobs.firstOrNull()?.id) {
+        if (jobs.isNotEmpty()) requester.bringIntoView()
     }
     Column(Modifier.bringIntoViewRequester(requester), verticalArrangement = Arrangement.spacedBy(DesignSize.Small)) {
-        when {
-            job == null || job.state == JobState.Cancelled -> {
-                EmptyState(
-                    stringResource(R.string.settings_downloads),
-                    stringResource(R.string.library_empty_title),
-                )
-            }
+        if (jobs.isEmpty()) {
+            EmptyState(stringResource(R.string.settings_downloads), stringResource(R.string.library_empty_title))
+        }
+        for (job in jobs) {
+            key(job.id) { DownloadEntry(job, pending, controls, snackbars) }
+        }
+    }
+}
 
-            job.state == JobState.Saved -> {
-                SavedDownload(job, snackbars)
-            }
+@Composable
+private fun DownloadEntry(
+    job: DownloadJob,
+    pending: String?,
+    controls: DownloadControls,
+    snackbars: SnackbarHostState,
+) {
+    when (job.state) {
+        JobState.Saved -> {
+            SavedDownload(job, snackbars)
+        }
 
-            job.state == JobState.Failed -> {
-                Text(job.title)
-                ErrorMessage(stringResource(job.error.message())) {}
-            }
+        JobState.Failed -> {
+            Text(job.title)
+            ErrorMessage(stringResource(job.error.message())) {}
+        }
 
-            else -> {
-                ActiveDownload(job, pending == job.id) { controls.requestCancel(job) }
-            }
+        else -> {
+            ActiveDownload(job, pending == job.id) { controls.requestCancel(job) }
         }
     }
 }

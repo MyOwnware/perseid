@@ -13,7 +13,9 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
@@ -33,10 +35,8 @@ internal class DownloadWorker(
         return try {
             if (dao.transition(id, JobState.Queued, JobState.Downloading) == 1) {
                 val job = requireNotNull(dao.observe(id).first())
-                setForeground(notifications.foreground(job))
+                setForeground(notifications.foreground(job, queued = queuedCount(dao.queue().first())))
                 download(job)
-            } else {
-                conclude(id, JobState.Waiting, null)
             }
             Result.success()
         } catch (cancelled: CancellationException) {
@@ -70,6 +70,12 @@ internal class DownloadWorker(
         coroutineScope {
             val progress = Channel<Progress>(Channel.CONFLATED)
             val updates = launch { for (event in progress) updateProgress(job, event) }
+            val queueUpdates =
+                launch {
+                    dao.queue().map(::queuedCount).distinctUntilChanged().collect { count ->
+                        setForeground(notifications.foreground(job, latestProgress, count))
+                    }
+                }
             val transfer = async { transferTracks(container.transferEngine, job, { progress.trySend(it) }, ::merge) }
             val cancellation = async { dao.observe(job.id).first { it?.state == JobState.Cancelling } }
             try {
@@ -81,15 +87,19 @@ internal class DownloadWorker(
                 transfer.cancel()
                 cancellation.cancel()
                 updates.cancel()
+                queueUpdates.cancel()
             }
         }
+
+    private var latestProgress: Progress? = null
 
     private suspend fun updateProgress(
         job: DownloadJob,
         progress: Progress,
     ) {
         dao.progress(job.id, progress.percent, progress.speed, progress.eta)
-        setForeground(notifications.foreground(job, progress))
+        latestProgress = progress
+        setForeground(notifications.foreground(job, progress, queuedCount(dao.queue().first())))
     }
 
     private suspend fun merge(
@@ -129,7 +139,7 @@ internal class DownloadWorker(
         error: DownloadError,
     ): Result {
         conclude(id, JobState.Failed, error)
-        return Result.failure()
+        return Result.success()
     }
 
     private suspend fun conclude(
@@ -156,3 +166,5 @@ private fun storageError(
     val error = classifyDownloadError(failure.message.orEmpty())
     return if (error == DownloadError.NoSpace) error else fallback
 }
+
+internal fun queuedCount(jobs: List<DownloadJob>): Int = jobs.count { it.state == JobState.Queued }
