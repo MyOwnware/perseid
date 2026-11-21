@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import app.myownware.perseid.core.design.DesignMotion
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.PerseidTopBar
+import app.myownware.perseid.core.locale.AppLanguage
 import app.myownware.perseid.feature.download.DownloadPlaceholder
 import app.myownware.perseid.feature.library.LibraryPlaceholder
 import app.myownware.perseid.feature.settings.SettingsPlaceholder
@@ -63,7 +64,10 @@ private enum class Destination(
 }
 
 @Composable
-internal fun PerseidShell() {
+internal fun PerseidShell(
+    language: AppLanguage,
+    onLanguage: (AppLanguage) -> Unit,
+) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     BackHandler(destination != Destination.Download) { destination = Destination.Download }
 
@@ -79,7 +83,7 @@ internal fun PerseidShell() {
             Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets),
             contentAlignment = Alignment.TopCenter,
         ) {
-            DestinationContent(destination, onDownload = { destination = Destination.Download })
+            DestinationContent(destination, language, onLanguage, onDownload = { destination = Destination.Download })
         }
     }
 }
@@ -87,6 +91,8 @@ internal fun PerseidShell() {
 @Composable
 private fun DestinationContent(
     destination: Destination,
+    language: AppLanguage,
+    onLanguage: (AppLanguage) -> Unit,
     onDownload: () -> Unit,
 ) {
     Column(
@@ -99,7 +105,7 @@ private fun DestinationContent(
         when (destination) {
             Destination.Download -> DownloadPlaceholder()
             Destination.Library -> LibraryPlaceholder(onDownload)
-            Destination.Settings -> SettingsPlaceholder()
+            Destination.Settings -> SettingsPlaceholder(language, onLanguage)
         }
     }
 }

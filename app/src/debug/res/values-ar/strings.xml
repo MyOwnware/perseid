@@ -1,0 +1,14 @@
+<resources>
+  <string name="preview_title">أدوات التنزيل</string>
+  <string name="preview_queue">قائمة التنزيلات</string>
+  <string name="preview_other_states">حالات أخرى</string>
+  <string name="preview_active_title">جولة على الساحل</string>
+  <string name="preview_queued_title">سماء الليل فوق الميناء</string>
+  <string name="preview_paused_title">صباح في الميناء</string>
+  <string name="preview_waiting_title">أمسية هادئة</string>
+  <string name="preview_download_video">تنزيل الفيديو</string>
+  <string name="preview_link_error">تعذّر فتح الرابط.</string>
+  <string name="preview_retry">حاول مجددًا</string>
+  <string name="download_cancelled">أُلغي التنزيل</string>
+  <string name="download_undo">تراجع</string>
+</resources>

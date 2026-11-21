@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -35,9 +37,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.myownware.perseid.R
-import kotlin.math.roundToInt
+import app.myownware.perseid.core.locale.TransferMetrics
+import app.myownware.perseid.core.locale.formatPercent
+import app.myownware.perseid.core.locale.formatTransferDetails
 
-private const val PERCENT_SCALE = 100
 private const val THUMBNAIL_ASPECT_RATIO = 16f / 9f
 
 internal enum class TransferState(
@@ -53,7 +56,7 @@ internal data class DownloadRowContent(
     val title: String,
     val state: TransferState,
     val progress: Float = 0f,
-    val details: String? = null,
+    val metrics: TransferMetrics? = null,
     val thumbnail: Painter? = null,
 )
 
@@ -127,8 +130,10 @@ private fun transferStatus(
     progress: Float,
 ): String {
     content.state.status?.let { return stringResource(it) }
-    val percentage = stringResource(R.string.download_progress_percent, (progress * PERCENT_SCALE).roundToInt())
-    return content.details?.let { stringResource(R.string.download_progress_details, percentage, it) } ?: percentage
+    val context = LocalContext.current
+    val percentage = formatPercent(progress, LocalConfiguration.current.locales[0])
+    val details = content.metrics?.let { formatTransferDetails(context, it) }
+    return if (details == null) percentage else stringResource(R.string.download_progress_details, percentage, details)
 }
 
 @Composable

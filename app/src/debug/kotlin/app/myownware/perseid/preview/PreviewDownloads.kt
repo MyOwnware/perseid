@@ -17,7 +17,10 @@ import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DownloadRow
 import app.myownware.perseid.core.design.DownloadRowContent
 import app.myownware.perseid.core.design.TransferState
+import app.myownware.perseid.core.locale.TransferMetrics
 import kotlinx.coroutines.launch
+
+private val ActiveMetrics = TransferMetrics(bytesPerSecond = 2_100_000, secondsRemaining = 38)
 
 private const val ACTIVE_PROGRESS = 0.46f
 private const val PAUSED_PROGRESS = 0.28f
@@ -88,9 +91,9 @@ private fun PreviewDownloadRow(
     onToggle: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val details = if (row.example == ExampleDownload.Active) stringResource(R.string.preview_active_details) else null
+    val metrics = if (row.example == ExampleDownload.Active) ActiveMetrics else null
     DownloadRow(
-        content = DownloadRowContent(stringResource(row.example.title), row.state, row.example.progress, details),
+        content = DownloadRowContent(stringResource(row.example.title), row.state, row.example.progress, metrics),
         onToggle = onToggle,
         onCancel = onCancel,
     )

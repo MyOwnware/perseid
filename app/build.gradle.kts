@@ -33,6 +33,12 @@ android {
         compose = true
     }
 
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     lint {
         abortOnError = true
         warningsAsErrors = true

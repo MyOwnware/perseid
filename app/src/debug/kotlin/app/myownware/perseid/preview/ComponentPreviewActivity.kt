@@ -1,5 +1,6 @@
 package app.myownware.perseid.preview
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,8 +24,13 @@ import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.PerseidTheme
 import app.myownware.perseid.core.design.PerseidTopBar
+import app.myownware.perseid.core.locale.localizedContext
 
 class ComponentPreviewActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(localizedContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
