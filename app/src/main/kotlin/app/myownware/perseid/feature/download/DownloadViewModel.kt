@@ -2,6 +2,8 @@ package app.myownware.perseid.feature.download
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.myownware.perseid.core.download.DownloadCoordinator
+import app.myownware.perseid.core.download.DownloadJob
 import app.myownware.perseid.core.engine.DownloadRequest
 import app.myownware.perseid.core.engine.MediaOption
 import app.myownware.perseid.core.engine.MediaPreview
@@ -15,6 +17,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
@@ -22,6 +25,7 @@ internal data class DownloadUiState(
     val link: String = "",
     val preview: PreviewState = PreviewState.Empty,
     val shareRevision: Int = 0,
+    val download: DownloadJob? = null,
 ) {
     fun downloadRequest(): DownloadRequest? {
         val ready = preview as? PreviewState.Ready ?: return null
@@ -32,7 +36,7 @@ internal data class DownloadUiState(
                 option.formatIds,
                 ready.media.title,
                 ready.media.thumbnailUrl,
-                option.requiresFfmpeg,
+                option.merge,
             )
         }
     }
@@ -69,12 +73,22 @@ internal sealed interface PreviewState {
 internal class DownloadViewModel(
     private val engine: PreviewEngine,
     private val scope: CoroutineScope? = null,
+    private val downloads: DownloadCoordinator? = null,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(DownloadUiState())
     val state = mutableState.asStateFlow()
 
     private var request: Job? = null
     private var prepared = false
+    val controls = DownloadControls(downloads) { scope ?: viewModelScope }
+
+    init {
+        if (downloads != null) {
+            (scope ?: viewModelScope).launch {
+                downloads.latest.collect { job -> mutableState.update { it.copy(download = job) } }
+            }
+        }
+    }
 
     fun editLink(link: String) {
         if (link == state.value.link) return
@@ -87,9 +101,9 @@ internal class DownloadViewModel(
         requestPreview()
     }
 
-    fun share(text: String) {
-        mutableState.value = state.value.copy(shareRevision = state.value.shareRevision + 1)
-        paste(text)
+    fun share(text: String?) {
+        mutableState.update { it.copy(shareRevision = it.shareRevision + 1) }
+        if (text != null) paste(text)
     }
 
     fun cancelPreview() {

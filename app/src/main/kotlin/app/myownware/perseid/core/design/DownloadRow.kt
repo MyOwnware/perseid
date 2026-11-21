@@ -49,7 +49,10 @@ internal enum class TransferState(
     Downloading(null),
     Paused(R.string.download_paused),
     Waiting(R.string.download_waiting),
+    Interrupted(R.string.download_interrupted),
     Queued(R.string.download_queued),
+    Publishing(R.string.download_publishing),
+    Cancelling(R.string.download_cancelling),
 }
 
 internal data class DownloadRowContent(
@@ -58,6 +61,8 @@ internal data class DownloadRowContent(
     val progress: Float = 0f,
     val metrics: TransferMetrics? = null,
     val thumbnail: Painter? = null,
+    val toggleEnabled: Boolean = true,
+    val cancelEnabled: Boolean = true,
 )
 
 @Composable
@@ -74,7 +79,7 @@ internal fun DownloadRow(
     ) {
         DownloadThumbnail(content.thumbnail)
         DownloadRowText(content, Modifier.weight(1f))
-        DownloadRowActions(content.state, onToggle, onCancel)
+        DownloadRowActions(content, onToggle, onCancel)
     }
 }
 
@@ -138,20 +143,23 @@ private fun transferStatus(
 
 @Composable
 private fun DownloadRowActions(
-    state: TransferState,
+    content: DownloadRowContent,
     onToggle: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    val state = content.state
     Row {
         if (state != TransferState.Queued) {
-            val downloading = state == TransferState.Downloading
+            val active = setOf(TransferState.Downloading, TransferState.Publishing, TransferState.Cancelling)
+            val downloading = state in active
             DownloadIconButton(
                 icon = if (downloading) R.drawable.ic_pause else R.drawable.ic_play_arrow,
                 description = if (downloading) R.string.download_pause_action else R.string.download_resume_action,
                 onClick = onToggle,
+                enabled = content.toggleEnabled,
             )
         }
-        DownloadIconButton(R.drawable.ic_close, R.string.download_cancel_action, onCancel)
+        DownloadIconButton(R.drawable.ic_close, R.string.download_cancel_action, onCancel, content.cancelEnabled)
     }
 }
 
@@ -160,16 +168,18 @@ private fun DownloadIconButton(
     icon: Int,
     description: Int,
     onClick: () -> Unit,
+    enabled: Boolean,
 ) {
     val label = stringResource(description)
     IconButton(
         onClick,
+        enabled = enabled,
         modifier = Modifier.size(DesignSize.TouchTarget).semantics { contentDescription = label },
     ) {
         Icon(
             painterResource(icon),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f),
         )
     }
 }

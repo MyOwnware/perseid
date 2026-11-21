@@ -15,6 +15,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,20 +34,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
-import app.myownware.perseid.core.design.EmptyState
 import app.myownware.perseid.core.design.ErrorMessage
 import app.myownware.perseid.core.design.SecondaryButton
 import app.myownware.perseid.core.engine.PreviewError
 
 @Composable
-internal fun DownloadScreen(model: DownloadViewModel) {
+internal fun DownloadScreen(
+    model: DownloadViewModel,
+    snackbars: SnackbarHostState,
+) {
     val state by model.state.collectAsState()
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         LinkInput(state.link, model)
         PreviewContent(state.preview, model::requestPreview)
-        MediaSelection(state.preview as? PreviewState.Ready, model)
+        MediaSelection(
+            state.preview as? PreviewState.Ready,
+            model,
+            state.download?.active == true,
+            downloadAction { model.controls.start(model.state.value) },
+        )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        EmptyState(stringResource(R.string.settings_downloads), stringResource(R.string.library_empty_title))
+        DownloadStatus(state.download, model.controls, snackbars)
     }
 }
 

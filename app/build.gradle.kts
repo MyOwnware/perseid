@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -63,7 +64,14 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
+    implementation(libs.room.runtime)
+    implementation(libs.work.runtime)
+    ksp(libs.room.compiler)
     implementation(libs.youtubedl) {
         exclude(group = "androidx.appcompat", module = "appcompat")
     }

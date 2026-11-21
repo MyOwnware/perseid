@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.myownware.perseid.core.design.PerseidTheme
+import app.myownware.perseid.core.download.SHOW_DOWNLOAD
 import app.myownware.perseid.core.locale.AppLanguage
 import app.myownware.perseid.core.locale.appLanguage
 import app.myownware.perseid.core.locale.changeAppLanguage
@@ -22,7 +23,10 @@ import app.myownware.perseid.feature.download.DownloadViewModel
 class MainActivity : ComponentActivity() {
     private val download by viewModels<DownloadViewModel> {
         viewModelFactory {
-            initializer { DownloadViewModel((application as PerseidApp).container.previewEngine) }
+            initializer {
+                val container = (application as PerseidApp).container
+                DownloadViewModel(container.previewEngine, downloads = container.downloads)
+            }
         }
     }
 
@@ -61,6 +65,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun acceptShare(intent: Intent) {
+        if (intent.action == SHOW_DOWNLOAD) download.share(null)
         if (intent.action != Intent.ACTION_SEND || intent.type != "text/plain") return
         download.share(intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString().orEmpty())
     }

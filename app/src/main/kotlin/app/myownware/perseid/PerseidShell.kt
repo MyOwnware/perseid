@@ -31,6 +31,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,6 +78,7 @@ internal fun PerseidShell(
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     val state by download.state.collectAsState()
+    val snackbars = remember { SnackbarHostState() }
     var handledShare by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.shareRevision) {
         if (state.shareRevision != handledShare) {
@@ -90,6 +94,7 @@ internal fun PerseidShell(
         contentColor = MaterialTheme.colorScheme.onBackground,
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         topBar = { PerseidTopBar(stringResource(destination.title)) },
+        snackbarHost = { SnackbarHost(snackbars) },
         bottomBar = { DestinationBar(destination) { destination = it } },
     ) { insets ->
         Box(
@@ -100,7 +105,7 @@ internal fun PerseidShell(
                 destination,
                 language,
                 onLanguage,
-                download,
+                downloadContent = { DownloadScreen(download, snackbars) },
                 onDownload = { destination = Destination.Download },
             )
         }
@@ -112,7 +117,7 @@ private fun DestinationContent(
     destination: Destination,
     language: AppLanguage,
     onLanguage: (AppLanguage) -> Unit,
-    download: DownloadViewModel,
+    downloadContent: @Composable () -> Unit,
     onDownload: () -> Unit,
 ) {
     Column(
@@ -123,7 +128,7 @@ private fun DestinationContent(
             .padding(horizontal = DesignSize.Gutter, vertical = DesignSize.Section),
     ) {
         when (destination) {
-            Destination.Download -> DownloadScreen(download)
+            Destination.Download -> downloadContent()
             Destination.Library -> LibraryPlaceholder(onDownload)
             Destination.Settings -> SettingsPlaceholder(language, onLanguage)
         }

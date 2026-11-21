@@ -1,4 +1,7 @@
 [versions]
+room = "2.8.5"
+work = "2.12.0"
+ksp = "2.3.14"
 agp = "9.5.0"
 kotlin = "2.4.21"
 compose-bom = "2026.11.01"
@@ -13,6 +16,9 @@ commons-compress = "1.28.0"
 commons-io = "2.22.0"
 
 [libraries]
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+work-runtime = { module = "androidx.work:work-runtime", version.ref = "work" }
 youtubedl = { module = "io.github.junkfood02.youtubedl-android:library", version.ref = "youtubedl" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
@@ -26,4 +32,5 @@ ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
 detekt = { module = "io.gitlab.arturbosch.detekt:detekt-cli", version.ref = "detekt" }
 
 [plugins]
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
