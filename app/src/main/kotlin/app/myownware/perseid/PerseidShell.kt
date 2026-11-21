@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -74,7 +75,7 @@ internal fun PerseidShell(
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     val state by download.state.collectAsState()
-    var handledShare by rememberSaveable { mutableStateOf(0) }
+    var handledShare by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.shareRevision) {
         if (state.shareRevision != handledShare) {
             destination = Destination.Download
