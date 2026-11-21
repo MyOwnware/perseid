@@ -27,8 +27,11 @@ internal class DownloadControls(
         scope().launch { downloads?.pause(job.id) }
     }
 
-    fun resume(job: DownloadJob) {
-        scope().launch { downloads?.resume(job.id) }
+    fun resume(
+        job: DownloadJob,
+        restart: Boolean = false,
+    ) {
+        scope().launch { downloads?.resume(job.id, restart) }
     }
 
     fun requestCancel(job: DownloadJob) {
