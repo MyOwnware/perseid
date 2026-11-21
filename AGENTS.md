@@ -1,6 +1,8 @@
 # Perseid
 
-Use one approved phase at a time. Start its branch from up-to-date main and work in small steps. Use the authorized phase workflow. For unscheduled changes across multiple files, get approval for a short plan first. State assumptions and ask about ambiguity or material trade-offs. Before adding a dependency, verify its current version online and get approval for its purpose, license and measured size. Ask before destructive actions. Run the available build, tests, ktlint, detekt and Android Lint checks with zero warnings. Report commands and results. After meaningful changes, explain the design briefly in French unless asked to skip it.
+All reports and messages are written in English.
+
+Use one approved phase at a time. Start its branch from up-to-date main and work in small steps. Use the authorized phase workflow. For unscheduled changes across multiple files, get approval for a short plan first. State assumptions and ask about ambiguity or material trade-offs. Before adding a dependency, verify its current version online and get approval for its purpose, license and measured size. Ask before destructive actions. Run the available build, tests, ktlint, detekt and Android Lint checks with zero warnings. Report commands and results. After meaningful changes, explain the design briefly unless asked to skip it.
 
 Use the existing Git identity and normal GPG-signed commits. Test signing first with `echo test | gpg --clearsign > /dev/null`. Stop if signing fails. Use small Conventional Commits with lowercase imperative subjects. Commit only when the user authorizes commits for the phase. Keep authorship free of generated attribution. Get approval before pushing or opening a PR. The owner rebases and merges PRs and creates tags. Never merge, tag, release manually or force-push. Keep secrets out of Git.
 
