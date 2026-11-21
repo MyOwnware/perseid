@@ -1,6 +1,5 @@
 package app.myownware.perseid.feature.download
 
-import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import app.myownware.perseid.BuildConfig
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.MediaChoice
@@ -28,6 +26,7 @@ import app.myownware.perseid.core.design.PrimaryButton
 import app.myownware.perseid.core.engine.MediaOption
 import app.myownware.perseid.core.engine.MediaSize
 import app.myownware.perseid.core.engine.MediaType
+import app.myownware.perseid.core.engine.TrackMerge
 import app.myownware.perseid.core.locale.formatFileSize
 import app.myownware.perseid.core.locale.formatVideoResolution
 
@@ -35,6 +34,8 @@ import app.myownware.perseid.core.locale.formatVideoResolution
 internal fun MediaSelection(
     preview: PreviewState.Ready?,
     model: DownloadViewModel,
+    active: Boolean,
+    onDownload: () -> Unit,
 ) {
     val type = preview?.type ?: MediaType.Video
     if (preview != null) {
@@ -52,17 +53,11 @@ internal fun MediaSelection(
             }
         }
     }
-    val context = LocalContext.current
     val label = if (type == MediaType.Video) R.string.download_video else R.string.download_audio
     PrimaryButton(
         label = stringResource(label),
-        enabled = preview?.selectedOption != null,
-        onClick = {
-            val request = model.state.value.downloadRequest()
-            if (request != null && BuildConfig.DEBUG) {
-                Toast.makeText(context, R.string.download_coming_soon, Toast.LENGTH_SHORT).show()
-            }
-        },
+        enabled = preview?.selectedOption != null && !active,
+        onClick = onDownload,
     )
 }
 
@@ -118,7 +113,7 @@ private fun VideoOptionDetails(option: MediaOption) {
     Column {
         Text(height?.let { formatVideoResolution(context, it) } ?: stringResource(R.string.media_video))
         option.size?.let { SizeText(it) }
-        if (height != null && height > DEFAULT_VIDEO_HEIGHT) {
+        if (option.merge == TrackMerge.WebM) {
             Text(stringResource(R.string.download_compatibility), style = MaterialTheme.typography.bodySmall)
         }
     }

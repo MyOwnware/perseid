@@ -8,6 +8,7 @@ import app.myownware.perseid.core.engine.MediaType
 import app.myownware.perseid.core.engine.PreviewEngine
 import app.myownware.perseid.core.engine.PreviewError
 import app.myownware.perseid.core.engine.PreviewFailure
+import app.myownware.perseid.core.engine.TrackMerge
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +70,7 @@ class DownloadViewModelTest {
     @Test
     fun defaultsToFullHdAndRestoresTheVideoSelectionAfterChoosingAudio() {
         val hd = MediaOption(listOf("hd", "audio"), 1080, null)
-        val high = MediaOption(listOf("4k", "audio"), 2160, null, true)
+        val high = MediaOption(listOf("4k", "audio"), 2160, null, TrackMerge.WebM)
         val audio = MediaOption(listOf("audio"), null, null)
         val thumbnail = "https://example.org/thumbnail"
         val options = MediaOptions(listOf(high, hd), audio)
@@ -84,13 +85,20 @@ class DownloadViewModelTest {
         model.selectVideo(0)
         model.selectType(MediaType.Audio)
         assertEquals(
-            DownloadRequest("https://example.org/video", MediaType.Audio, audio.formatIds, "Example", thumbnail, false),
+            DownloadRequest("https://example.org/video", MediaType.Audio, audio.formatIds, "Example", thumbnail, null),
             model.state.value.downloadRequest(),
         )
 
         model.selectType(MediaType.Video)
         assertEquals(
-            DownloadRequest("https://example.org/video", MediaType.Video, high.formatIds, "Example", thumbnail, true),
+            DownloadRequest(
+                "https://example.org/video",
+                MediaType.Video,
+                high.formatIds,
+                "Example",
+                thumbnail,
+                TrackMerge.WebM,
+            ),
             model.state.value.downloadRequest(),
         )
     }

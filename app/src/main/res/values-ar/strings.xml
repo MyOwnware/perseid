@@ -57,5 +57,23 @@
   <string name="download_audio">تنزيل الصوت</string>
   <string name="download_best_audio">أفضل جودة</string>
   <string name="download_compatibility">قد لا يعمل على كل الهواتف</string>
-  <string name="download_coming_soon">التنزيل متاح قريبًا</string>
+  <string name="download_running">جارٍ التنزيل</string>
+  <string name="download_publishing">جارٍ الحفظ</string>
+  <string name="download_cancelling">جارٍ إلغاء التنزيل</string>
+  <string name="download_undo">تراجع</string>
+  <string name="download_saved">تم الحفظ</string>
+  <string name="download_open">فتح</string>
+  <string name="download_share">مشاركة</string>
+  <string name="download_open_failed">تعذّر فتح هذا الملف بأي تطبيق.</string>
+  <string name="download_no_space">لا توجد مساحة كافية على هذا الجهاز.</string>
+  <string name="download_offline">لا يوجد اتصال بالإنترنت. تم الاحتفاظ بالملفات الجزئية.</string>
+  <string name="download_refused">رفض الموقع هذا التنزيل.</string>
+  <string name="download_merge_failed">تعذّر دمج الفيديو والصوت.</string>
+  <string name="download_save_failed">تعذّر حفظ الملف.</string>
+  <string name="download_failed">تعذّر إكمال التنزيل.</string>
+  <string name="download_notifications_title">إشعارات التنزيل</string>
+  <string name="download_notifications_explanation">اسمح بالإشعارات لمتابعة التقدّم وفتح الملفات المحفوظة خارج Perseid.</string>
+  <string name="download_notifications_allow">متابعة</string>
+  <string name="download_notifications_skip">التنزيل دون إشعارات</string>
+  <string name="download_interrupted">توقّف التنزيل</string>
 </resources>

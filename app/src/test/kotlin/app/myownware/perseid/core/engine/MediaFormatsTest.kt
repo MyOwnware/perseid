@@ -1,7 +1,6 @@
 package app.myownware.perseid.core.engine
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -12,10 +11,11 @@ class MediaFormatsTest {
         val options = fixture("youtube")
         assertEquals(listOf(2160, 1440, 1080, 720, 480, 360, 240, 144), options.video.map { it.height })
         val fullHd = options.video.first { it.height == 1080 }
-        assertEquals(MediaOption(listOf("299", "258"), 1080, MediaSize(288_387_264, false)), fullHd)
+        assertEquals(MediaOption(listOf("299", "258"), 1080, MediaSize(288_387_264, false), TrackMerge.Mp4), fullHd)
         assertEquals(MediaOption(listOf("258"), null, MediaSize(30_767_611, false)), options.audio)
-        assertEquals(listOf("401", "258"), options.video.first().formatIds)
-        assertTrue(options.video.first().requiresFfmpeg)
+        assertEquals(listOf("315", "251"), options.video.first().formatIds)
+        assertEquals(listOf("308", "251"), options.video[1].formatIds)
+        assertEquals(listOf(TrackMerge.WebM, TrackMerge.WebM), options.video.take(2).map { it.merge })
         assertEquals(MediaSize(28_526_904, true), options.video.first { it.height == 360 }.size)
     }
 
@@ -40,10 +40,10 @@ class MediaFormatsTest {
     }
 
     @Test
-    fun xPairsSplitFormatsWithoutGuessingTheMissingSizeOrCodec() {
+    fun xUsesDirectFormatsWhenSplitAudioCodecIsUnknown() {
         val options = fixture("x")
         assertEquals(listOf(720, 360, 270), options.video.map { it.height })
-        assertEquals(MediaOption(listOf("hls-716", "hls-audio-128000-Audio"), 720, null, true), options.video.first())
+        assertEquals(listOf("http-2176", "http-832", "http-288"), options.video.map { it.formatIds.single() })
         assertEquals(MediaOption(listOf("hls-audio-128000-Audio"), null, null), options.audio)
     }
 
@@ -74,7 +74,7 @@ class MediaFormatsTest {
     fun splitSizeIsEstimatedWhenEitherStreamIsEstimated() {
         val option = splitOptions("100", """"filesize_approx":25""").video.single()
         assertEquals(MediaSize(125, true), option.size)
-        assertFalse(option.requiresFfmpeg)
+        assertEquals(TrackMerge.Mp4, option.merge)
     }
 
     @Test
@@ -84,7 +84,7 @@ class MediaFormatsTest {
     }
 
     @Test
-    fun webmMergeUsesMatchingAudioAndRequiresFfmpeg() {
+    fun webmMergeUsesMatchingOpusAudio() {
         val options =
             parse(
                 """{"formats":[
@@ -93,7 +93,7 @@ class MediaFormatsTest {
                 {"format_id":"opus","ext":"webm","vcodec":"none","acodec":"opus"}
             ]}""",
             )
-        assertEquals(MediaOption(listOf("vp9", "opus"), 1440, null, true), options.video.single())
+        assertEquals(MediaOption(listOf("vp9", "opus"), 1440, null, TrackMerge.WebM), options.video.single())
         assertEquals(listOf("aac"), options.audio?.formatIds)
     }
 
@@ -106,7 +106,7 @@ class MediaFormatsTest {
                 {"format_id":"aac","ext":"m4a","vcodec":"none","acodec":"aac"}
             ]}""",
             )
-        assertEquals(MediaOption(listOf("hevc", "aac"), 1080, null), options.video.single())
+        assertEquals(MediaOption(listOf("hevc", "aac"), 1080, null, TrackMerge.Mp4), options.video.single())
     }
 
     private fun splitOptions(

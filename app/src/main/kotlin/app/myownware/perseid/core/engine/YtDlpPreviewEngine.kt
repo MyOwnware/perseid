@@ -25,7 +25,12 @@ internal class YtDlpPreviewEngine(
             durationSeconds = metadata.path("duration").asLong(-1).takeIf { it >= 0 },
             thumbnail = thumbnailUrl?.let { loadThumbnail(it) },
             thumbnailUrl = thumbnailUrl,
-            options = metadata.mediaOptions(),
+            options =
+                if (metadata.metadataText("extractor_key") == "Generic" && URI.create(url).rawQuery != null) {
+                    MediaOptions()
+                } else {
+                    metadata.mediaOptions()
+                },
         )
     }
 

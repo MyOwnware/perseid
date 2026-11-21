@@ -57,6 +57,24 @@
   <string name="download_audio">Télécharger l’audio</string>
   <string name="download_best_audio">Qualité optimale</string>
   <string name="download_compatibility">Peut ne pas être lisible sur tous les téléphones</string>
-  <string name="download_coming_soon">Téléchargement bientôt disponible</string>
   <string name="download_estimated_size" translatable="false">~%1$s</string>
+  <string name="download_running">Téléchargement</string>
+  <string name="download_publishing">Enregistrement</string>
+  <string name="download_cancelling">Annulation du téléchargement</string>
+  <string name="download_undo">Annuler</string>
+  <string name="download_saved">Enregistré</string>
+  <string name="download_open">Ouvrir</string>
+  <string name="download_share">Partager</string>
+  <string name="download_open_failed">Aucune application n’a pu ouvrir ce fichier.</string>
+  <string name="download_no_space">Il n’y a plus de place sur cet appareil.</string>
+  <string name="download_offline">Pas de connexion Internet. Les fichiers partiels sont conservés.</string>
+  <string name="download_refused">Le site a refusé ce téléchargement.</string>
+  <string name="download_merge_failed">Impossible de réunir la vidéo et l’audio.</string>
+  <string name="download_save_failed">Impossible d’enregistrer le fichier.</string>
+  <string name="download_failed">Le téléchargement n’a pas pu se terminer.</string>
+  <string name="download_notifications_title">Notifications de téléchargement</string>
+  <string name="download_notifications_explanation">Autorisez les notifications pour suivre la progression et ouvrir les fichiers enregistrés hors de Perseid.</string>
+  <string name="download_notifications_allow">Continuer</string>
+  <string name="download_notifications_skip">Télécharger sans notification</string>
+  <string name="download_interrupted">Téléchargement interrompu</string>
 </resources>
