@@ -17,5 +17,4 @@ ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
 detekt = { module = "io.gitlab.arturbosch.detekt:detekt-cli", version.ref = "detekt" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
