@@ -6,7 +6,7 @@ Perseid is the first app in MyOwnware. It is planned to keep download history, p
 
 ## Features
 
-- Planned — paste or share a link and preview the media.
+- Paste or share a public media link to preview its thumbnail, title, author and duration when available.
 - Planned — choose Audio or Video and select video quality.
 - Planned — download in the background, pause, resume and save to Download/Perseid/.
 - Planned — search, play, share and delete downloads from a local library.
@@ -25,16 +25,16 @@ Set `ANDROID_HOME` to the SDK location or open the project in Android Studio.
 ./gradlew ktlintCheck detekt lint testDebugUnitTest assembleDebug --warning-mode fail
 ```
 
-The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`. It opens a
-single Compose screen and supports arm64-v8a devices and x86_64 emulators.
+The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`. It opens
+the Download screen and supports arm64-v8a devices and x86_64 emulators.
 
 ## Screenshots
 
-Screenshots will be added when the app UI is available.
+See [preview screenshots](docs/design/) in French and Arabic.
 
 ## License
 
-Perseid is licensed under [GPL-3.0](LICENSE). See the [roadmap](docs/PLAN.md) for the planned engine, architecture and release checks.
+Perseid is licensed under [GPL-3.0](LICENSE). See [engine notices and source links](app/src/main/assets/licenses/download-engine.txt) and the [roadmap](docs/PLAN.md).
 
 ## Use
 

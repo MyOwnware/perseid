@@ -1,9 +1,7 @@
 # Privacy
 
-Perseid is in development. This policy describes the intended app behavior.
+Perseid has no accounts, ads, analytics, telemetry, crash reporting, tracking SDKs or Google Play Services. It has no server of its own.
 
-Perseid has no accounts, ads, analytics, telemetry, crash reporting, tracking SDKs or Google Play Services. Download records, partial files and preferences stay on the device and are excluded from app backup and device transfer. Cancel to remove a partial download. Delete finished media from the library or through Android.
+Tap Paste to let Perseid read the current clipboard text. You can also enter a link yourself or send one through Android's share sheet. The app requests a preview when you tap Preview or Paste, submit the field with the keyboard, or share a link to Perseid. It contacts the source site and the services that supply metadata and the thumbnail. Those services can see your IP address and the requests they receive.
 
-When you preview or download a link, Perseid makes requests to the source site and the servers it uses for metadata, thumbnails and media. These servers can see your IP address and the requests they receive. Retries are part of the download you authorized. A manual engine update contacts the update host. Perseid has no server of its own.
-
-Finished files are stored in Download/Perseid/. Android and apps you share a file with may handle it under their own settings and policies.
+Preview links and images are held in app memory. The app does not write links or titles to release logs. It prepares the bundled engine in private on-device storage the first time you request a preview. Private app data is excluded from Android backup and device transfer.
