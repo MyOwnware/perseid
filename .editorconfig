@@ -10,3 +10,7 @@ indent_size = 4
 
 [*.{yml,yaml,json,xml,md}]
 indent_size = 2
+
+[*.kt]
+# Android Lint enforces Compose function naming.
+ktlint_function_naming_ignore_when_annotated_with = Composable
