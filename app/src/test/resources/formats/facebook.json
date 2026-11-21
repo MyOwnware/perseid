@@ -1,0 +1,14 @@
+{
+  "formats": [
+    {
+      "format_id": "sd",
+      "ext": "mp4",
+      "filesize_approx": null
+    },
+    {
+      "format_id": "hd",
+      "ext": "mp4",
+      "filesize_approx": null
+    }
+  ]
+}

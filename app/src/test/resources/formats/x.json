@@ -1,0 +1,64 @@
+{
+  "formats": [
+    {
+      "format_id": "hls-audio-32000-Audio",
+      "ext": "mp4",
+      "vcodec": "none"
+    },
+    {
+      "format_id": "hls-audio-64000-Audio",
+      "ext": "mp4",
+      "vcodec": "none"
+    },
+    {
+      "format_id": "hls-audio-128000-Audio",
+      "ext": "mp4",
+      "vcodec": "none"
+    },
+    {
+      "format_id": "http-288",
+      "ext": "mp4",
+      "height": 270,
+      "width": 272,
+      "filesize_approx": 557568
+    },
+    {
+      "format_id": "hls-191",
+      "ext": "mp4",
+      "vcodec": "avc1.4D400D",
+      "acodec": "none",
+      "height": 270,
+      "width": 272
+    },
+    {
+      "format_id": "http-832",
+      "ext": "mp4",
+      "height": 360,
+      "width": 364,
+      "filesize_approx": 1610752
+    },
+    {
+      "format_id": "hls-343",
+      "ext": "mp4",
+      "vcodec": "avc1.4D4015",
+      "acodec": "none",
+      "height": 360,
+      "width": 364
+    },
+    {
+      "format_id": "http-2176",
+      "ext": "mp4",
+      "height": 720,
+      "width": 728,
+      "filesize_approx": 4212736
+    },
+    {
+      "format_id": "hls-716",
+      "ext": "mp4",
+      "vcodec": "avc1.64001F",
+      "acodec": "none",
+      "height": 720,
+      "width": 728
+    }
+  ]
+}
