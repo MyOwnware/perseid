@@ -53,4 +53,9 @@
   <string name="preview_unknown">تعذّر عرض المعاينة.</string>
   <string name="preview_try_again">حاول مجددًا</string>
   <string name="preview_metadata_separator">" · "</string>
+  <string name="download_video">تنزيل الفيديو</string>
+  <string name="download_audio">تنزيل الصوت</string>
+  <string name="download_best_audio">أفضل جودة</string>
+  <string name="download_compatibility">قد لا يعمل على كل الهواتف</string>
+  <string name="download_coming_soon">التنزيل متاح قريبًا</string>
 </resources>

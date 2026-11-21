@@ -53,4 +53,9 @@
   <string name="preview_unknown">Could not load the preview.</string>
   <string name="preview_try_again">Try again</string>
   <string name="preview_metadata_separator">" · "</string>
+  <string name="download_video">Download video</string>
+  <string name="download_audio">Download audio</string>
+  <string name="download_best_audio">Best quality</string>
+  <string name="download_compatibility">May not play on every phone</string>
+  <string name="download_coming_soon">Download coming soon</string>
 </resources>

@@ -53,4 +53,10 @@
   <string name="preview_unknown">Impossible d’afficher l’aperçu.</string>
   <string name="preview_try_again">Réessayer</string>
   <string name="preview_metadata_separator">" · "</string>
+  <string name="download_video">Télécharger la vidéo</string>
+  <string name="download_audio">Télécharger l’audio</string>
+  <string name="download_best_audio">Qualité optimale</string>
+  <string name="download_compatibility">Peut ne pas être lisible sur tous les téléphones</string>
+  <string name="download_coming_soon">Téléchargement bientôt disponible</string>
+  <string name="download_estimated_size" translatable="false">~%1$s</string>
 </resources>
