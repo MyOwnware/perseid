@@ -12,3 +12,34 @@ buildscript {
 plugins {
     alias(libs.plugins.compose.compiler) apply false
 }
+
+val ktlintCli =
+    configurations.create("ktlintCli") {
+        isTransitive = false
+    }
+
+val detektCli =
+    configurations.create("detektCli") {
+        isTransitive = false
+    }
+
+dependencies {
+    add(ktlintCli.name, variantOf(libs.ktlint) { classifier("all") })
+    add(detektCli.name, variantOf(libs.detekt) { classifier("all") })
+}
+
+tasks.register<JavaExec>("ktlintCheck") {
+    group = "verification"
+    description = "Check Kotlin source and build script formatting."
+    classpath = ktlintCli
+    mainClass.set("com.pinterest.ktlint.Main")
+    args("**/*.kt", "**/*.kts", "!**/build/**", "!**/.gradle/**")
+}
+
+tasks.register<JavaExec>("detekt") {
+    group = "verification"
+    description = "Analyze the app Kotlin source."
+    classpath = detektCli
+    mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
+    args("--input", "app/src")
+}
