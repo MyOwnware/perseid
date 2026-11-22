@@ -53,7 +53,7 @@ internal fun LibraryRow(
         Row(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
+                .heightIn(min = DesignSize.TouchTarget)
                 .clickable(onClickLabel = stringResource(R.string.download_open), onClick = onOpen)
                 .padding(top = DesignSize.Small),
             horizontalArrangement = Arrangement.spacedBy(DesignSize.Small),
@@ -82,7 +82,7 @@ private fun LibraryThumbnail(path: String?) {
         Modifier
             .size(width = 80.dp, height = 56.dp)
             .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surface),
         contentAlignment = Alignment.Center,
     ) {
         val image = thumbnail

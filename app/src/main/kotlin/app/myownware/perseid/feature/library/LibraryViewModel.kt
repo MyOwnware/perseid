@@ -9,24 +9,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 
 internal class LibraryViewModel(
     private val library: LibraryFiles,
 ) : ViewModel() {
-    private val filters = MutableStateFlow(LibraryFilters())
+    private val filter = MutableStateFlow(LibraryFilter.All)
     private val checked = MutableStateFlow(false)
     val state =
-        combine(library.items, filters, checked) { items, criteria, ready ->
-            LibraryUiState(items.takeIf { ready }, criteria)
+        combine(library.items, filter, checked) { items, choice, ready ->
+            LibraryUiState(items.takeIf { ready }, choice)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), LibraryUiState())
 
-    fun search(query: String) {
-        filters.update { it.copy(search = query) }
-    }
-
     fun filter(choice: LibraryFilter) {
-        filters.update { it.copy(filter = choice) }
+        filter.value = choice
     }
 
     suspend fun refresh() {
@@ -39,11 +34,6 @@ internal class LibraryViewModel(
 
 internal data class LibraryUiState(
     val downloads: List<DownloadJob>? = null,
-    val filters: LibraryFilters = LibraryFilters(),
-)
-
-internal data class LibraryFilters(
-    val search: String = "",
     val filter: LibraryFilter = LibraryFilter.All,
 )
 
