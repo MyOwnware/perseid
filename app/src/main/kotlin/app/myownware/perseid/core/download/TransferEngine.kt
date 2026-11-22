@@ -1,6 +1,7 @@
 package app.myownware.perseid.core.download
 
 import android.content.Context
+import app.myownware.perseid.core.engine.BundledEngine
 import app.myownware.perseid.core.engine.metadataText
 import app.myownware.perseid.core.engine.readMetadata
 import com.fasterxml.jackson.databind.JsonNode
@@ -57,7 +58,7 @@ internal class YtDlpTransferEngine(
         val directory = File(job.stagingPath)
         val staged = directory.listFiles().orEmpty().any { it.name.startsWith("track-$index.") && it.length() > 0 }
         return try {
-            YoutubeDL.init(context)
+            BundledEngine.prepare(context)
             val source = resolveTrack(job, format, index)
             val file = File(directory, "track-$index.${source.extension}")
             val http = source.http

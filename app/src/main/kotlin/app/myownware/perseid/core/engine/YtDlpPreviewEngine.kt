@@ -13,7 +13,7 @@ internal class YtDlpPreviewEngine(
     private val context: Context,
 ) : PreviewEngine {
     override suspend fun prepare() {
-        runInterruptible(Dispatchers.IO) { YoutubeDL.init(context) }
+        runInterruptible(Dispatchers.IO) { BundledEngine.prepare(context) }
     }
 
     override suspend fun preview(url: String): MediaPreview {
