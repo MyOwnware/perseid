@@ -3,8 +3,6 @@ package app.myownware.perseid.core.download
 import android.webkit.MimeTypeMap
 import app.myownware.perseid.core.engine.MediaType
 import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
 
 private const val MAX_TITLE_CODEPOINTS = 48L
 
@@ -48,16 +46,3 @@ private val MimeTypes =
         "mkv" to "video/x-matroska",
         "ts" to "video/mp2t",
     )
-
-internal fun copyInterruptibly(
-    input: InputStream,
-    output: OutputStream,
-) {
-    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-    while (true) {
-        if (Thread.interrupted()) throw InterruptedException()
-        val count = input.read(buffer)
-        if (count < 0) break
-        output.write(buffer, 0, count)
-    }
-}
