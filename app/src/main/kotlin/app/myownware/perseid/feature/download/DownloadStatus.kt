@@ -39,6 +39,7 @@ import app.myownware.perseid.core.download.JobState
 import app.myownware.perseid.core.download.MAX_PERCENT
 import app.myownware.perseid.core.download.SavedMedia
 import app.myownware.perseid.core.download.launchSavedMedia
+import app.myownware.perseid.core.download.requiresRestart
 import app.myownware.perseid.core.locale.TransferMetrics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -87,11 +88,13 @@ private fun DownloadEntry(
 
         JobState.Failed -> {
             Text(job.title)
-            ErrorMessage(stringResource(job.error.message())) {
-                val restart = job.error == DownloadError.CannotResume
+            val restart = job.requiresRestart
+            val error = if (restart) DownloadError.CannotResume else job.error
+            ErrorMessage(stringResource(error.message())) {
                 val action = if (restart) R.string.download_start_again else R.string.preview_try_again
+                val cancel = if (restart) R.string.download_cancel_restart else R.string.download_cancel_action
                 SecondaryButton(stringResource(action), { controls.resume(job, restart) })
-                SecondaryButton(stringResource(R.string.download_cancel_action), { controls.requestCancel(job) })
+                SecondaryButton(stringResource(cancel), { controls.requestCancel(job) })
             }
         }
 

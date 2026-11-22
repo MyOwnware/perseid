@@ -17,8 +17,17 @@ class QueueOutcomeTest {
     fun repeatedTransientFailuresEventuallyNeedUserAction() {
         assertEquals(QueueOutcome(JobState.Retrying, 3), recoveryOutcome(DownloadError.Transient, true, 2))
         val exhausted = recoveryOutcome(DownloadError.Transient, true, 3)
-        assertEquals(QueueOutcome(JobState.Failed, 3, DownloadError.Transient), exhausted)
+        assertEquals(QueueOutcome(JobState.Failed, 3, DownloadError.CannotResume), exhausted)
         assertFalse(exhausted.retry)
+    }
+
+    @Test
+    fun anExpiredStreamStopsRetryingAtTheLimit() {
+        assertEquals(QueueOutcome(JobState.Retrying, 3), recoveryOutcome(DownloadError.Expired, true, 2))
+        assertEquals(
+            QueueOutcome(JobState.Failed, 3, DownloadError.CannotResume),
+            recoveryOutcome(DownloadError.Expired, true, 3),
+        )
     }
 
     @Test

@@ -21,8 +21,12 @@ internal fun recoveryOutcome(
         error == DownloadError.CannotResume -> QueueOutcome(JobState.Failed, retries, error)
         !connected && error in NetworkErrors -> QueueOutcome(JobState.Waiting, retries)
         error in NetworkErrors && retries < MAX_RETRIES -> QueueOutcome(JobState.Retrying, retries + 1)
+        error in NetworkErrors -> QueueOutcome(JobState.Failed, retries, DownloadError.CannotResume)
         else -> QueueOutcome(JobState.Failed, retries, error)
     }
+
+internal val DownloadJob.requiresRestart: Boolean
+    get() = error == DownloadError.CannotResume || (error in NetworkErrors && retries >= MAX_RETRIES)
 
 internal val RecoverableStates =
     setOf(
