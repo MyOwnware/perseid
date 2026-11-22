@@ -10,7 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -25,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
@@ -53,7 +54,7 @@ internal fun LibraryScreen(
         when {
             downloads == null -> Unit
             downloads.isEmpty() -> LibraryEmpty(onDownload)
-            else -> LibraryResults(downloads, state.filters, viewModel, snackbars)
+            else -> LibraryResults(downloads, state.filter, viewModel, snackbars)
         }
     }
 }
@@ -61,10 +62,11 @@ internal fun LibraryScreen(
 @Composable
 private fun LibraryResults(
     downloads: List<DownloadJob>,
-    filters: LibraryFilters,
+    filter: LibraryFilter,
     viewModel: LibraryViewModel,
     snackbars: SnackbarHostState,
 ) {
+    var search by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -82,8 +84,8 @@ private fun LibraryResults(
         }
     }
 
-    LibrarySearch(filters.search, viewModel::search, filters.filter, viewModel::filter)
-    val visible = downloads.matching(filters.filter, filters.search)
+    LibrarySearch(search, { search = it }, filter, viewModel::filter)
+    val visible = downloads.matching(filter, search)
     LazyColumn {
         if (visible.isEmpty()) {
             item {
@@ -133,7 +135,12 @@ private fun LibrarySearch(
                 selected = filter == option,
                 onClick = { onFilter(option) },
                 label = { Text(stringResource(option.label)) },
-                modifier = Modifier.heightIn(min = 48.dp),
+                modifier = Modifier.heightIn(min = DesignSize.TouchTarget),
+                colors =
+                    FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    ),
             )
         }
     }
