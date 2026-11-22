@@ -5,14 +5,13 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -67,6 +66,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) acceptShare(intent)
+        WindowCompat.enableEdgeToEdge(window)
+        window.isNavigationBarContrastEnforced = true
         val preferences = (application as PerseidApp).container.preferences
         setContent {
             val selected by preferences.state.collectAsState()
@@ -86,9 +87,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateSystemBars(dark: Boolean) {
-        val transparent = android.graphics.Color.TRANSPARENT
-        val bars = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent)
-        enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+        }
     }
 
     override fun onResume() {
