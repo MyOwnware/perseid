@@ -10,7 +10,7 @@ import androidx.core.content.edit
 import app.myownware.perseid.R
 import java.util.Locale
 
-private const val LANGUAGE_PREFERENCES = "language_preferences"
+internal const val LANGUAGE_PREFERENCES = "language_preferences"
 private const val LANGUAGE_CHOICE = "app_language"
 
 internal enum class AppLanguage(

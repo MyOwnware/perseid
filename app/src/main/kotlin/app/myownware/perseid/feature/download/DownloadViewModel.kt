@@ -11,6 +11,8 @@ import app.myownware.perseid.core.engine.MediaType
 import app.myownware.perseid.core.engine.PreviewEngine
 import app.myownware.perseid.core.engine.PreviewError
 import app.myownware.perseid.core.engine.PreviewFailure
+import app.myownware.perseid.core.preferences.Preferences
+import app.myownware.perseid.core.preferences.VideoQuality
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -76,6 +78,7 @@ internal class DownloadViewModel(
     private val engine: PreviewEngine,
     private val scope: CoroutineScope? = null,
     private val downloads: DownloadCoordinator? = null,
+    private val preferences: () -> Preferences = { Preferences() },
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(DownloadUiState())
     val state = mutableState.asStateFlow()
@@ -146,7 +149,7 @@ internal class DownloadViewModel(
     private suspend fun load(url: String) {
         try {
             val preview = withTimeout(PREVIEW_TIMEOUT_MILLIS) { fetch(url) }
-            publish(PreviewState.Ready(preview, url))
+            publish(initialPreview(preview, url, preferences()))
         } catch (_: TimeoutCancellationException) {
             publish(PreviewState.Failed(PreviewError.Unknown))
         } catch (cancelled: CancellationException) {
@@ -177,14 +180,31 @@ internal class DownloadViewModel(
     }
 }
 
-internal const val DEFAULT_VIDEO_HEIGHT = 1080
+internal fun initialPreview(
+    media: MediaPreview,
+    url: String,
+    defaults: Preferences,
+): PreviewState.Ready {
+    val index = defaultVideoIndex(media.options.video, defaults.quality)
+    val audio = media.options.audio != null
+    val type =
+        when {
+            defaults.choice == MediaType.Audio && audio -> MediaType.Audio
+            index < 0 && audio -> MediaType.Audio
+            else -> MediaType.Video
+        }
+    return PreviewState.Ready(media, url, index, type)
+}
 
-private fun defaultVideoIndex(options: List<MediaOption>): Int {
-    val lowestKnown = options.indexOfLast { it.height != null }
-    val withinLimit = options.indexOfFirst { it.height != null && it.height <= DEFAULT_VIDEO_HEIGHT }
-    return when {
-        withinLimit >= 0 -> withinLimit
-        lowestKnown >= 0 -> lowestKnown
-        else -> options.lastIndex
-    }
+internal fun defaultVideoIndex(
+    options: List<MediaOption>,
+    quality: VideoQuality = VideoQuality.UpTo1080,
+): Int {
+    if (quality == VideoQuality.Best) return if (options.isEmpty()) -1 else 0
+    val limit = checkNotNull(quality.heightLimit)
+    val known = options.indices.filter { options[it].height != null }
+    val withinLimit = known.filter { checkNotNull(options[it].height) <= limit }
+    return withinLimit.maxByOrNull { checkNotNull(options[it].height) }
+        ?: known.minByOrNull { checkNotNull(options[it].height) }
+        ?: options.lastIndex
 }
