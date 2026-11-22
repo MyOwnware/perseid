@@ -58,7 +58,8 @@ import app.myownware.perseid.core.design.PerseidTopBar
 import app.myownware.perseid.core.locale.AppLanguage
 import app.myownware.perseid.feature.download.DownloadScreen
 import app.myownware.perseid.feature.download.DownloadViewModel
-import app.myownware.perseid.feature.library.LibraryPlaceholder
+import app.myownware.perseid.feature.library.LibraryScreen
+import app.myownware.perseid.feature.library.LibraryViewModel
 import app.myownware.perseid.feature.settings.EngineUpdateViewModel
 import app.myownware.perseid.feature.settings.SettingsPlaceholder
 
@@ -77,6 +78,7 @@ internal fun PerseidShell(
     onLanguage: (AppLanguage) -> Unit,
     download: DownloadViewModel,
     engineUpdate: EngineUpdateViewModel,
+    library: LibraryViewModel,
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     val state by download.state.collectAsState()
@@ -103,12 +105,24 @@ internal fun PerseidShell(
             Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets),
             contentAlignment = Alignment.TopCenter,
         ) {
-            DestinationContent(
-                destination,
-                settingsContent = { SettingsPlaceholder(language, onLanguage, engineUpdate) },
-                downloadContent = { DownloadScreen(download, snackbars) },
-                onDownload = { destination = Destination.Download },
-            )
+            if (destination == Destination.Library) {
+                LibraryScreen(
+                    library,
+                    snackbars,
+                    onDownload = { destination = Destination.Download },
+                    modifier =
+                        Modifier
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = DesignSize.Gutter, vertical = DesignSize.Section),
+                )
+            } else {
+                DestinationContent(
+                    destination,
+                    settingsContent = { SettingsPlaceholder(language, onLanguage, engineUpdate) },
+                    downloadContent = { DownloadScreen(download, snackbars) },
+                )
+            }
         }
     }
 }
@@ -118,7 +132,6 @@ private fun DestinationContent(
     destination: Destination,
     settingsContent: @Composable () -> Unit,
     downloadContent: @Composable () -> Unit,
-    onDownload: () -> Unit,
 ) {
     Column(
         Modifier
@@ -129,7 +142,7 @@ private fun DestinationContent(
     ) {
         when (destination) {
             Destination.Download -> downloadContent()
-            Destination.Library -> LibraryPlaceholder(onDownload)
+            Destination.Library -> Unit
             Destination.Settings -> settingsContent()
         }
     }
