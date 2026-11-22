@@ -145,6 +145,7 @@ internal class DownloadRunner(
         try {
             postProgress(info)
         } catch (failure: IllegalStateException) {
+            coroutineContext.ensureActive()
             throw PlatformProgressRefused(failure)
         } catch (failure: SecurityException) {
             throw PlatformProgressRefused(failure)
