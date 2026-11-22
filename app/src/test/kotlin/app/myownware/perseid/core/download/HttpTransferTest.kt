@@ -54,6 +54,21 @@ class HttpTransferTest {
             assertFalse(target.exists())
         }
 
+    @Test
+    fun narrowsRefusedRangesWithoutChangingTheOffset() {
+        val server = RangeFixture(10 * 1024 * 1024)
+        try {
+            server.refuseWideRanges = true
+            val target = File(files.newFolder(), "track.mp4")
+            val completed = HttpTransfer(server.source(), target).download {}
+            assertTrue(server.ranges.contains("bytes=8388608-16777215"))
+            assertTrue(server.ranges.contains("bytes=8388608-9437183"))
+            assertArrayEquals(server.bytes, completed.readBytes())
+        } finally {
+            server.close()
+        }
+    }
+
     private fun interrupt(
         source: HttpSource,
         target: File,
@@ -76,10 +91,13 @@ class HttpTransferTest {
         }
     }
 
-    private class RangeFixture {
-        val bytes = ByteArray(131_072) { (it % 251).toByte() }
+    private class RangeFixture(
+        size: Int = 131_072,
+    ) {
+        val bytes = ByteArray(size) { (it % 251).toByte() }
         val ranges = mutableListOf<String>()
         var ignoreRanges = false
+        var refuseWideRanges = false
         private val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
 
         init {
@@ -98,7 +116,10 @@ class HttpTransferTest {
             val range = exchange.requestHeaders.getFirst("Range")
             val (first, last) = range.removePrefix("bytes=").split('-').map(String::toInt)
             ranges += range
-            if (ignoreRanges) {
+            if (refuseWideRanges && first > 0 && last - first >= 1024 * 1024) {
+                exchange.sendResponseHeaders(403, -1)
+                exchange.close()
+            } else if (ignoreRanges) {
                 exchange.sendResponseHeaders(200, bytes.size.toLong())
                 exchange.responseBody.use { it.write(bytes) }
             } else {

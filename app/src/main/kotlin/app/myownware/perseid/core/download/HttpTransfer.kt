@@ -1,9 +1,8 @@
 package app.myownware.perseid.core.download
 
-import java.io.EOFException
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
@@ -35,6 +34,7 @@ internal class HttpTransfer(
 ) {
     private val partial = File(target.parentFile, "${target.name}.part")
     private val checkpoint = File(target.parentFile, "${target.name}.checkpoint")
+    private var chunkSize = CHUNK_SIZE
 
     fun download(progress: (Progress) -> Unit): File {
         val offset = partial.length()
@@ -69,16 +69,16 @@ internal class HttpTransfer(
         partial.inputStream().use { local ->
             var first = 0L
             while (first < offset) {
-                val last = minOf(first + CHUNK_SIZE - 1, offset - 1)
-                request(first, last, saved.etag) { connection ->
-                    val range = connection.range(first, last, saved.length)
-                    if (range.last != last || !verifyValidator(connection, saved)) cannotResume()
-                    if (saved.etag != null) return
-                    connection.inputStream.use { stream ->
-                        comparePrefix(local, stream, bytes, remote, last - first + 1)
+                first =
+                    rangeRequest(first, offset - 1, saved.etag) { connection, last ->
+                        val range = connection.range(first, last, saved.length)
+                        if (range.last != last || !verifyValidator(connection, saved)) cannotResume()
+                        if (saved.etag != null) return
+                        connection.inputStream.use { stream ->
+                            comparePrefix(local, stream, bytes, remote, last - first + 1)
+                        }
+                        last + 1
                     }
-                }
-                first = last + 1
             }
         }
     }
@@ -111,8 +111,7 @@ internal class HttpTransfer(
         progress: (Long, Long?) -> Unit,
     ): Checkpoint {
         val expected = saved?.length ?: source.length
-        val last = offset + CHUNK_SIZE - 1
-        return request(offset, last, saved?.etag) { connection ->
+        return rangeRequest(offset, Long.MAX_VALUE, saved?.etag) { connection, last ->
             val range =
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     null
@@ -147,28 +146,8 @@ internal class HttpTransfer(
         progress: (Long) -> Unit,
     ) {
         input.use { stream ->
-            partial.outputStreamForAppend().use { out -> copyBytes(stream, out, limit, progress) }
+            partial.outputStreamForAppend().use { out -> copyInterruptibly(stream, out, limit, progress) }
         }
-    }
-
-    private fun copyBytes(
-        input: InputStream,
-        output: OutputStream,
-        limit: Long?,
-        progress: (Long) -> Unit,
-    ) {
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        var transferred = 0L
-        while (limit == null || transferred < limit) {
-            checkInterrupted()
-            val available = limit?.minus(transferred) ?: buffer.size.toLong()
-            val count = input.read(buffer, 0, minOf(buffer.size.toLong(), available).toInt())
-            if (count < 0) break
-            output.write(buffer, 0, count)
-            transferred += count
-            progress(transferred)
-        }
-        if (limit != null && transferred != limit) throw EOFException()
     }
 
     private fun writeCheckpoint(value: Checkpoint) {
@@ -186,6 +165,25 @@ internal class HttpTransfer(
             StandardCopyOption.ATOMIC_MOVE,
             StandardCopyOption.REPLACE_EXISTING,
         )
+    }
+
+    private inline fun <T> rangeRequest(
+        first: Long,
+        limit: Long,
+        etag: String?,
+        block: (HttpURLConnection, Long) -> T,
+    ): T {
+        val last = minOf(limit, first + chunkSize - 1)
+        return try {
+            request(first, last, etag) { block(it, last) }
+        } catch (failure: DownloadFailure) {
+            if (failure.cause !is RangeWidthRefused || first == 0L || last - first < SMALL_CHUNK_SIZE) {
+                throw failure
+            }
+            chunkSize = SMALL_CHUNK_SIZE
+            val smallerLast = first + chunkSize - 1
+            request(first, smallerLast, etag) { block(it, smallerLast) }
+        }
     }
 
     private inline fun <T> request(
@@ -263,10 +261,6 @@ private fun ByteArray.regionMatches(
     count: Int,
 ): Boolean = (0 until count).all { this[it] == other[it] }
 
-private fun checkInterrupted() {
-    if (Thread.interrupted()) throw InterruptedException()
-}
-
 private fun handleResponseCode(
     code: Int,
     first: Long,
@@ -279,7 +273,10 @@ private fun handleResponseCode(
             code == HTTP_TOO_MANY_REQUESTS || code >= HttpURLConnection.HTTP_INTERNAL_ERROR -> DownloadError.Transient
             else -> DownloadError.Refused
         }
-    if (error != null) throw DownloadFailure(error)
+    if (error != null) {
+        val cause = if (code == HttpURLConnection.HTTP_FORBIDDEN) RangeWidthRefused() else null
+        throw DownloadFailure(error, cause)
+    }
 }
 
 private fun transferProgress(
@@ -302,6 +299,10 @@ private val ExpiredCodes =
     setOf(HttpURLConnection.HTTP_FORBIDDEN, HttpURLConnection.HTTP_GONE, HttpURLConnection.HTTP_UNAUTHORIZED)
 private const val HTTP_RANGE_NOT_SATISFIABLE = 416
 private const val HTTP_TOO_MANY_REQUESTS = 429
+
+private class RangeWidthRefused : IOException()
+
+private const val SMALL_CHUNK_SIZE = 1024L * 1024
 private const val CHUNK_SIZE = 8L * 1024 * 1024
 private const val TIMEOUT = 15_000
 private const val PROGRESS_INTERVAL_NS = 500_000_000L
