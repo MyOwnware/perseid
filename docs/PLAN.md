@@ -17,7 +17,7 @@ Compose screens → ViewModels → immutable UI state via StateFlow
                        ↑
     WorkManager → youtubedl-android → yt-dlp → Android MediaMuxer
                        ↓
-              MediaStore Downloads → Media3 / Android share sheet
+              MediaStore Downloads → Android player / share sheet
 ```
 
 - `feature/download` handles incoming links, preview, format selection and transfer controls.
@@ -36,8 +36,8 @@ Upstream stable versions checked on 2026-11-21. These are reference versions. Ap
 | Compose BOM / Material 3 | UI and components | [2026.11.01](https://developer.android.com/develop/ui/compose/bom/bom-mapping?from=2026.09.00&to=2026.11.01) / [1.5.0](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | Activity Compose / Lifecycle / Navigation Compose | Activity, ViewModels, screen routing | [1.13.0 / 2.11.1 / 2.10.2](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | Coroutines | Asynchronous work, Flow and test scheduling | [1.11.0](https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.11.0) | Apache-2.0 |
-| Room / DataStore | Job and library records / preferences | [2.8.5 / 1.3.0](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
-| WorkManager / Media3 | Background scheduling / local playback | [2.12.0 / 1.11.1](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
+| Room | Job and library records | [2.8.5](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
+| WorkManager | Background scheduling | [2.12.0](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | youtubedl-android | Android engine wrapper and native artifacts | [0.18.1](https://github.com/yausername/youtubedl-android/releases/tag/0.18.1) | [GPL-3.0](https://github.com/yausername/youtubedl-android/blob/0.18.1/LICENSE) |
 | yt-dlp | Extractors and transfers | [2026.10.26](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26) | Unlicense for upstream code. Bundled code has additional terms. |
 | ktlint / detekt | Kotlin formatting and static analysis | [1.8.0](https://github.com/ktlint/ktlint/releases/tag/1.8.0) / [1.23.8](https://github.com/detekt/detekt/releases/tag/v1.23.8) | MIT / Apache-2.0 |
@@ -87,7 +87,7 @@ Each implementation phase starts from up-to-date main. Use small signed commits 
 | 6c Current engine and manual update | `phase/06c-engine-update` | Bundle verified yt-dlp offline, add signed manual updates and rollback, and verify YouTube playback. | v0.1.0 |
 | 7 Release pipeline | `phase/07-release-pipeline` | Build signed arm64 APKs on owner-created vX.Y.Z tags → add checksums, notices, source links and notes → verify the artifact and an install. | v0.1.0 |
 | 8 Library and player | `phase/08-library-player` | Add library filters and search → local player → delete/share and missing-file behavior. | v0.2.0 |
-| 9 Settings | `phase/09-settings` | Store theme and download preferences. | v0.3.0 |
+| 9 Settings | `phase/09-settings` | Store theme and download preferences, manage abandoned partials, and provide offline privacy and license information. | v0.3.0 |
 | 10 Polish | `phase/10-polish` | Review binaries and privacy → check devices, accessibility, recovery and performance → update screenshots and release documentation. | v1.0.0 |
 
 ### Phase 4 Download screen order
