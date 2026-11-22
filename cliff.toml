@@ -25,6 +25,7 @@ sort_commits = "oldest"
 commit_parsers = [
   { message = '^chore\(release\)!?:', skip = true },
   { message = '^[a-z]+\((ci|build|test|style|deps|docs)\)!?:', group = "4: Under the hood" },
+  { message = '^(fix\(engine\): align preview options with kotlin formatting|fix\(navigation\): avoid boxing the shared link counter|fix\(download\): record resume refusals in debug logs|feat\(app\): add the compose application skeleton|feat\(engine\): map preview formats to media options)$', group = "4: Under the hood" },
   { message = "^feat", group = "1: New" },
   { message = "^perf", group = "2: Improvements" },
   { message = "^fix", group = "3: Fixes" },
