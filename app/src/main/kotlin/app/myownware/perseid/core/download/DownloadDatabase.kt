@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 internal enum class JobState {
     Queued,
     Downloading,
+    Merging,
     Publishing,
     Cancelling,
     Saved,
@@ -51,8 +52,18 @@ internal data class DownloadJob(
     @ColumnInfo(defaultValue = "0") val retries: Int = 0,
 ) {
     val canCancel get() = state !in setOf(JobState.Publishing, JobState.Cancelling, JobState.Saved, JobState.Cancelled)
-    val active get() = state in setOf(JobState.Queued, JobState.Downloading, JobState.Publishing, JobState.Cancelling)
+    val active
+        get() = state in ActiveStates
 }
+
+private val ActiveStates =
+    setOf(
+        JobState.Queued,
+        JobState.Downloading,
+        JobState.Merging,
+        JobState.Publishing,
+        JobState.Cancelling,
+    )
 
 @Dao
 internal abstract class DownloadDao {
@@ -110,6 +121,16 @@ internal abstract class DownloadDao {
         progress: Int,
         speed: Long?,
         eta: Long?,
+    )
+
+    @Query("UPDATE downloads SET state = 'Publishing' WHERE id = :id AND state IN ('Downloading', 'Merging')")
+    abstract suspend fun beginPublishing(id: String): Int
+
+    @Query("UPDATE downloads SET contentUri = :uri, mimeType = :mime WHERE id = :id AND state = 'Publishing'")
+    abstract suspend fun attachExport(
+        id: String,
+        uri: String,
+        mime: String,
     )
 
     @Query(

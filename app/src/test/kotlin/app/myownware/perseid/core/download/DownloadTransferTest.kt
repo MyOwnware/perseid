@@ -106,6 +106,16 @@ class DownloadTransferTest {
         assertFalse(publishing.copy(state = JobState.Saved).active)
     }
 
+    @Test
+    fun reusesACompletedMergeAfterPublicationWasInterrupted() =
+        runBlocking {
+            val job = job("299\n258", TrackMerge.Mp4)
+            val merged = File(job.stagingPath, "merged.mp4").apply { writeText("already joined") }
+            val engine = TransferEngine { _, _, _, _ -> error("A saved track was downloaded again") }
+            val result = transferTracks(engine, job, {}) { _, _, _ -> error("A finished merge was repeated") }
+            assertEquals(merged, result)
+        }
+
     private fun job(
         formats: String,
         mode: TrackMerge? = null,
