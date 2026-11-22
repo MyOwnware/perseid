@@ -13,7 +13,7 @@ One Android app module, Kotlin, minSdk 29, application ID `app.myownware.perseid
 ```text
 Compose screens → ViewModels → immutable UI state via StateFlow
                        ↓
-              Room + DataStore
+              Room + SharedPreferences
                        ↑
     WorkManager → youtubedl-android → yt-dlp → Android MediaMuxer
                        ↓
@@ -48,7 +48,7 @@ Download, Library and Settings are top-level destinations as they become availab
 
 Show progress, speed, time left, pause, resume and cancel with plain errors and a next action. Show Open and Share after publication. Library supports All, Video and Audio filters, search, local playback, share and delete. Settings contains theme, default choice and quality, manual engine update, About, Privacy and licenses.
 
-Room stores the job ID, original URL while needed for retry, media identity, selected format IDs, status, retry state, staging location and export URI. Completed library entries retain title, author, duration, media type, size, completion time and URI. DataStore holds theme and download defaults. Keep partials and sidecars in persistent private storage and exclude private app data from Android backup and transfer. Use only the network requests needed for user-authorized previews, downloads, retries and manual engine updates.
+Room stores the job ID, original URL while needed for retry, media identity, selected format IDs, status, retry state, staging location and export URI. Completed library entries retain title, author, duration, media type, size, completion time and URI. SharedPreferences holds theme and download defaults. Keep partials and sidecars in persistent private storage and exclude private app data from Android backup and transfer. Use only the network requests needed for user-authorized previews, downloads, retries and manual engine updates.
 
 ## Resume
 
@@ -87,7 +87,7 @@ Each implementation phase starts from up-to-date main. Use small signed commits 
 | 6c Current engine and manual update | `phase/06c-engine-update` | Bundle verified yt-dlp offline, add signed manual updates and rollback, and verify YouTube playback. | v0.1.0 |
 | 7 Release pipeline | `phase/07-release-pipeline` | Build signed arm64 APKs on owner-created vX.Y.Z tags → add checksums, notices, source links and notes → verify the artifact and an install. | v0.1.0 |
 | 8 Library and player | `phase/08-library-player` | Add library filters and search → local player → delete/share and missing-file behavior. | v0.2.0 |
-| 9 Settings | `phase/09-settings-engine-update` | Store theme and download preferences. | v0.3.0 |
+| 9 Settings | `phase/09-settings` | Store theme and download preferences. | v0.3.0 |
 | 10 Polish | `phase/10-polish` | Review binaries and privacy → check devices, accessibility, recovery and performance → update screenshots and release documentation. | v1.0.0 |
 
 ### Phase 4 Download screen order
