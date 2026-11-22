@@ -72,8 +72,10 @@ def main():
 
     print(f"## Perseid {args.tag} – {title}\n\n{description}")
     for group, commits in changes(revision).items():
+        if not commits:
+            continue
         print(f"\n### {GROUPS[group]}\n")
-        for message in commits or ["None."]:
+        for message in commits:
             print(f"- {message}")
     print(
         f"\n### 📦 Download\n\n"
