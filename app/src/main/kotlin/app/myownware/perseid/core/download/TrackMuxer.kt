@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import java.io.File
 import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 internal suspend fun muxTracks(
     mode: TrackMerge,
@@ -16,20 +18,28 @@ internal suspend fun muxTracks(
     directory: File,
 ): File =
     runInterruptible(Dispatchers.IO) {
-        val output = File(directory, if (mode == TrackMerge.Mp4) "merged.mp4" else "merged.webm")
+        val output = mergedFile(mode, directory)
+        val temporary = File(directory, "merging.${output.extension}")
         val muxFormat =
             when (mode) {
                 TrackMerge.Mp4 -> MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
                 TrackMerge.WebM -> MediaMuxer.OutputFormat.MUXER_OUTPUT_WEBM
             }
-        val muxer = MediaMuxer(output.path, muxFormat)
+        val muxer = MediaMuxer(temporary.path, muxFormat)
         try {
             muxTracks(muxer, inputs, mode)
-            output
         } finally {
             muxer.release()
         }
+        if (Thread.interrupted()) throw InterruptedException()
+        Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        output
     }
+
+internal fun mergedFile(
+    mode: TrackMerge,
+    directory: File,
+): File = File(directory, if (mode == TrackMerge.Mp4) "merged.mp4" else "merged.webm")
 
 private fun muxTracks(
     muxer: MediaMuxer,

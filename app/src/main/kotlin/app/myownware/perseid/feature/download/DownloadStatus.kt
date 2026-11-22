@@ -154,6 +154,7 @@ private fun SavedDownload(
 private fun JobState.transferState(): TransferState =
     when (this) {
         JobState.Downloading -> TransferState.Downloading
+        JobState.Merging -> TransferState.Merging
         JobState.Publishing -> TransferState.Publishing
         JobState.Paused -> TransferState.Paused
         JobState.Waiting -> TransferState.Waiting
@@ -174,4 +175,5 @@ private fun DownloadError?.message(): Int =
         else -> R.string.download_failed
     }
 
-private val ToggleStates = setOf(JobState.Downloading, JobState.Paused, JobState.Waiting, JobState.Retrying)
+private val ToggleStates =
+    setOf(JobState.Downloading, JobState.Merging, JobState.Paused, JobState.Waiting, JobState.Retrying)

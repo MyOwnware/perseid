@@ -44,7 +44,7 @@ internal class DownloadCoordinator(
     suspend fun pause(id: String) {
         changeState(id) { state ->
             when (state) {
-                JobState.Downloading -> JobState.Pausing
+                JobState.Downloading, JobState.Merging -> JobState.Pausing
                 JobState.Waiting, JobState.Retrying -> JobState.Paused
                 else -> null
             }
@@ -74,15 +74,50 @@ internal class DownloadCoordinator(
                 val job = dao.observe(id).first() ?: return@withTransaction
                 if (!job.canCancel) return@withTransaction
                 when (job.state) {
-                    JobState.Downloading, JobState.Pausing -> {
+                    JobState.Downloading, JobState.Merging, JobState.Pausing -> {
                         dao.transition(id, job.state, JobState.Cancelling)
                     }
 
                     else -> {
+                        deletePendingExport(context.contentResolver, job.contentUri)
                         File(job.stagingPath).deleteRecursively()
                         dao.transition(id, job.state, JobState.Cancelled)
                     }
                 }
+            }
+        }
+    }
+
+    suspend fun reconcile() {
+        withContext(Dispatchers.IO) {
+            database.withTransaction {
+                val manager = WorkManager.getInstance(context)
+                val jobs = dao.queue().first()
+                for (job in jobs) {
+                    if (job.state == JobState.Saved || !manager.hasDownloadWork(job)) reconcileJob(job)
+                }
+            }
+        }
+    }
+
+    private suspend fun reconcileJob(job: DownloadJob) {
+        when (job.state) {
+            JobState.Pausing -> {
+                dao.transition(job.id, JobState.Pausing, JobState.Paused)
+            }
+
+            JobState.Cancelling -> {
+                deletePendingExport(context.contentResolver, job.contentUri)
+                File(job.stagingPath).deleteRecursively()
+                dao.transition(job.id, JobState.Cancelling, JobState.Cancelled)
+            }
+
+            in RecoverableStates -> {
+                schedule(job.id)
+            }
+
+            else -> {
+                Unit
             }
         }
     }
@@ -176,4 +211,10 @@ private fun preserveAttempt(job: DownloadJob) {
     for (file in files) {
         Files.move(file.toPath(), File(archive, file.name).toPath(), StandardCopyOption.ATOMIC_MOVE)
     }
+}
+
+private fun WorkManager.hasDownloadWork(job: DownloadJob): Boolean {
+    if (job.state !in RecoverableStates && job.state !in setOf(JobState.Pausing, JobState.Cancelling)) return true
+    return getWorkInfosByTag(downloadTag(job.id)).get().any { !it.state.isFinished } ||
+        getWorkInfoById(UUID.fromString(job.id)).get()?.state?.isFinished == false
 }

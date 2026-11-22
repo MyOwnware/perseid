@@ -53,6 +53,7 @@ internal enum class TransferState(
     Retrying(R.string.download_retrying),
     Queued(R.string.download_queued),
     Publishing(R.string.download_publishing),
+    Merging(R.string.download_merging),
     Cancelling(R.string.download_cancelling),
 }
 

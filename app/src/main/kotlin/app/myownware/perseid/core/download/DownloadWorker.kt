@@ -58,6 +58,7 @@ internal class DownloadWorker(
             return Result.success()
         }
         setForeground(notifications.foreground(job, queued = queuedCount(dao.queue().first())))
+        withContext(Dispatchers.IO) { requireStorage(context, context.noBackupFilesDir, 1) }
         download(job)
         return Result.success()
     }
@@ -65,15 +66,17 @@ internal class DownloadWorker(
     private suspend fun recordInterrupted(job: DownloadJob) {
         withContext(NonCancellable) {
             val next = if (context.hasConnection()) JobState.Queued else JobState.Waiting
-            dao.transition(job.id, JobState.Downloading, next)
+            if (dao.transition(job.id, JobState.Downloading, next) == 0) {
+                dao.transition(job.id, JobState.Merging, next)
+            }
         }
     }
 
     private suspend fun download(job: DownloadJob) {
         val media = transferUntilCancelled(job) ?: return
-        if (dao.transition(job.id, JobState.Downloading, JobState.Publishing) != 1) return
+        if (dao.beginPublishing(job.id) != 1) return
+        val saved = save(job, media)
         withContext(NonCancellable) {
-            val saved = save(job, media)
             dao.saved(job.id, saved.uri.toString(), saved.mime, System.currentTimeMillis())
             withContext(Dispatchers.IO) { File(job.stagingPath).deleteRecursively() }
             notifications.saved(job, saved)
@@ -90,7 +93,12 @@ internal class DownloadWorker(
                         setForeground(notifications.foreground(job, latestProgress, count))
                     }
                 }
-            val transfer = async { transferTracks(container.transferEngine, job, { progress.trySend(it) }, ::merge) }
+            val transfer =
+                async {
+                    transferTracks(container.transferEngine, job, { progress.trySend(it) }) { mode, tracks, folder ->
+                        merge(job, mode, tracks, folder)
+                    }
+                }
             val stop = setOf(JobState.Cancelling, JobState.Pausing)
             val cancellation = async { dao.observe(job.id).first { it?.state in stop } }
             try {
@@ -118,11 +126,14 @@ internal class DownloadWorker(
     }
 
     private suspend fun merge(
+        job: DownloadJob,
         mode: TrackMerge,
         inputs: List<File>,
         directory: File,
     ): File =
         try {
+            if (dao.transition(job.id, JobState.Downloading, JobState.Merging) != 1) throw CancellationException()
+            withContext(Dispatchers.IO) { requireStorage(context, directory, inputs.sumOf(File::length)) }
             muxTracks(mode, inputs, directory)
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -140,7 +151,11 @@ internal class DownloadWorker(
     ): SavedMedia =
         try {
             if (job.merge == null && job.type == MediaType.Video) verifyDirectVideo(media)
-            publishMedia(context.contentResolver, media, job)
+            val resolver = context.contentResolver
+            val saved = reserveExport(resolver, media, job)
+            dao.attachExport(job.id, saved.uri.toString(), saved.mime)
+            publishMedia(resolver, media, job, saved)
+            saved
         } catch (failure: DownloadFailure) {
             throw failure
         } catch (failure: IOException) {
@@ -154,7 +169,7 @@ internal class DownloadWorker(
         error: DownloadError,
     ): Result {
         val state = dao.observe(job.id).first()?.state
-        if (state !in setOf(JobState.Downloading, JobState.Publishing)) return Result.success()
+        if (state !in setOf(JobState.Downloading, JobState.Merging, JobState.Publishing)) return Result.success()
         val outcome = recoveryOutcome(error, context.hasConnection(), job.retries)
         dao.record(job.id, requireNotNull(state), outcome.state, outcome.error, outcome.retries)
         return if (outcome.retry) Result.retry() else Result.success()
@@ -168,6 +183,7 @@ internal class DownloadWorker(
             }
 
             JobState.Cancelling -> {
+                deletePendingExport(context.contentResolver, job.contentUri)
                 File(job.stagingPath).deleteRecursively()
                 dao.transition(id, JobState.Cancelling, JobState.Cancelled)
             }

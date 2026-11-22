@@ -25,7 +25,14 @@ internal fun recoveryOutcome(
     }
 
 internal val RecoverableStates =
-    setOf(JobState.Queued, JobState.Downloading, JobState.Publishing, JobState.Waiting, JobState.Retrying)
+    setOf(
+        JobState.Queued,
+        JobState.Downloading,
+        JobState.Merging,
+        JobState.Publishing,
+        JobState.Waiting,
+        JobState.Retrying,
+    )
 
 internal fun Context.hasConnection(): Boolean {
     val manager = getSystemService(ConnectivityManager::class.java)
