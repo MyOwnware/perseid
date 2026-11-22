@@ -10,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.myownware.perseid.core.design.PerseidTheme
@@ -19,6 +20,7 @@ import app.myownware.perseid.core.locale.appLanguage
 import app.myownware.perseid.core.locale.changeAppLanguage
 import app.myownware.perseid.core.locale.localizedContext
 import app.myownware.perseid.feature.download.DownloadViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val download by viewModels<DownloadViewModel> {
@@ -51,6 +53,11 @@ class MainActivity : ComponentActivity() {
                 PerseidShell(appLanguage(this), ::selectLanguage, download)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { (application as PerseidApp).container.downloads.reconcile() }
     }
 
     override fun onStop() {

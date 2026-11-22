@@ -1,6 +1,7 @@
 package app.myownware.perseid.core.download
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -26,12 +27,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+internal const val TRANSFER_NOTIFICATION_ID = 3
+private const val ANDROID_PAUSED_NOTIFICATION_ID = 4
 internal const val SHOW_DOWNLOAD = "app.myownware.perseid.SHOW_DOWNLOAD"
 private const val CHANNEL_ID = "downloads"
 
 internal class DownloadNotifications(
     private val context: Context,
 ) {
+    fun starting(): Notification {
+        val local = localizedContext(context)
+        return builder(local, local.getString(R.string.app_name))
+            .setContentText(local.getString(R.string.download_running))
+            .setOngoing(true)
+            .build()
+    }
+
     fun foreground(
         job: DownloadJob,
         progress: Progress? = null,
@@ -49,18 +60,35 @@ internal class DownloadNotifications(
                 .setOngoing(true)
                 .addAction(0, local.getString(R.string.download_cancel_action), cancelIntent(job.id))
                 .build()
-        return ForegroundInfo(job.id.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        return ForegroundInfo(TRANSFER_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
+
+    fun androidPaused() {
+        if (!canNotify()) return
+        val local = localizedContext(context)
+        val message = local.getString(R.string.download_android_paused)
+        val notification =
+            builder(local, local.getString(R.string.app_name))
+                .setContentText(message)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setAutoCancel(true)
+                .build()
+        context.getSystemService(NotificationManager::class.java).notify(ANDROID_PAUSED_NOTIFICATION_ID, notification)
+    }
+
+    fun clearAndroidPause() {
+        context.getSystemService(NotificationManager::class.java).cancel(ANDROID_PAUSED_NOTIFICATION_ID)
+    }
+
+    private fun canNotify(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
     fun saved(
         job: DownloadJob,
         media: SavedMedia,
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+        if (!canNotify()) return
         val local = localizedContext(context)
         val notification =
             builder(local, job.title)

@@ -24,6 +24,7 @@ internal enum class JobState {
     Cancelled,
     Pausing,
     Paused,
+    AndroidPaused,
     Waiting,
     Retrying,
 }
@@ -81,11 +82,14 @@ internal abstract class DownloadDao {
     @Insert
     abstract suspend fun insert(job: DownloadJob)
 
-    @Query("UPDATE downloads SET state = :next WHERE id = :id AND state = :expected")
-    abstract suspend fun transition(
-        id: String,
-        expected: JobState,
+    @Query(
+        "UPDATE downloads SET state = :next, speed = NULL, eta = NULL " +
+            "WHERE state IN (:states) AND (:id IS NULL OR id = :id)",
+    )
+    abstract suspend fun transitionQueue(
+        states: Set<JobState>,
         next: JobState,
+        id: String? = null,
     ): Int
 
     @Query(
@@ -144,6 +148,12 @@ internal abstract class DownloadDao {
         at: Long,
     )
 }
+
+internal suspend fun DownloadDao.transition(
+    id: String,
+    expected: JobState,
+    next: JobState,
+): Int = transitionQueue(setOf(expected), next, id)
 
 @Database(
     entities = [DownloadJob::class],

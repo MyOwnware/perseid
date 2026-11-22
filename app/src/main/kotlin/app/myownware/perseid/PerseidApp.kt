@@ -1,16 +1,15 @@
 package app.myownware.perseid
 
 import android.app.Application
+import androidx.work.Configuration
 import app.myownware.perseid.core.AppContainer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import app.myownware.perseid.core.download.FIRST_TRANSFER_JOB_ID
 
-class PerseidApp : Application() {
+class PerseidApp :
+    Application(),
+    Configuration.Provider {
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setJobSchedulerJobIdRange(0, FIRST_TRANSFER_JOB_ID - 1).build()
+
     val container by lazy { AppContainer(this) }
-
-    override fun onCreate() {
-        super.onCreate()
-        CoroutineScope(Dispatchers.IO).launch { container.downloads.reconcile() }
-    }
 }
