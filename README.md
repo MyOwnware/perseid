@@ -33,6 +33,7 @@ the Download screen and supports arm64-v8a devices and x86_64 emulators.
 
 See [preview and quality selection screenshots](docs/design/) in French and Arabic and
 [download recovery screenshots](docs/design/download-06b/) in English, French and Arabic.
+See [engine update screenshots](docs/design/engine-06c/) in French and Arabic.
 The playback screenshot shows Big Buck Bunny, © 2008 Blender Foundation / www.bigbuckbunny.org. [CC BY 3.0 attribution](https://peach.blender.org/about/).
 
 ## License

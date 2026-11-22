@@ -58,7 +58,7 @@ internal object BundledEngine {
     ): EngineSelection {
         val bundled = BuildConfig.BUNDLED_YT_DLP_VERSION
         val selected = storage.selection()
-        if (selected != null && selected.bundleSeen == bundled) {
+        if (selected != null && selected.bundleSeen == BUNDLE_BUILD) {
             storage.sync(selected)
             return selected
         }
@@ -80,10 +80,10 @@ internal object BundledEngine {
     ): EngineSelection {
         val bundled = BuildConfig.BUNDLED_YT_DLP_VERSION
         if (!shouldInstallBundled(current, bundled)) {
-            return EngineSelection(current, selected?.previous, bundled)
+            return EngineSelection(current, selected?.previous, BUNDLE_BUILD)
         }
         context.assets.open("engine/yt-dlp").use { storage.save(bundled, it) }
-        return EngineSelection(bundled, current.takeIf { existing || selected != null }, bundled)
+        return EngineSelection(bundled, current.takeIf { existing || selected != null }, BUNDLE_BUILD)
     }
 }
 
@@ -113,3 +113,5 @@ private fun engineDate(version: String): LocalDate {
 }
 
 private val VERSION_PATTERN = Regex("[0-9]{4}\\.[0-9]{1,2}\\.[0-9]{1,2}")
+
+private const val BUNDLE_BUILD = "${BuildConfig.VERSION_CODE}:${BuildConfig.BUNDLED_YT_DLP_VERSION}"
