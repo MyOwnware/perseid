@@ -158,6 +158,7 @@ private fun JobState.transferState(): TransferState =
         JobState.Publishing -> TransferState.Publishing
         JobState.Paused -> TransferState.Paused
         JobState.Waiting -> TransferState.Waiting
+        JobState.AndroidPaused -> TransferState.AndroidPaused
         JobState.Pausing -> TransferState.Paused
         JobState.Retrying -> TransferState.Retrying
         JobState.Cancelling -> TransferState.Cancelling

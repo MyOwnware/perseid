@@ -32,6 +32,7 @@
   <string name="media_resolution">%1$sp</string>
   <string name="download_paused">En pause</string>
   <string name="download_waiting">En attente de connexion</string>
+  <string name="download_android_paused">Android a mis ce téléchargement en pause. Ouvrez Perseid pour le reprendre.</string>
   <string name="download_queued">En file d’attente</string>
   <string name="download_pause_action">Mettre en pause</string>
   <string name="download_resume_action">Reprendre le téléchargement</string>

@@ -2,32 +2,30 @@ package app.myownware.perseid.core.download
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.room.withTransaction
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import app.myownware.perseid.core.engine.DownloadRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.UUID
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
 
 internal class DownloadCoordinator(
     private val context: Context,
     private val database: DownloadDatabase,
 ) {
     private val dao = database.downloads()
+    private val notifications = DownloadNotifications(context)
+    private val scheduler = downloadScheduler(context)
+    private val scheduling = Mutex()
+    internal val execution = Mutex()
     val queue = dao.queue()
 
     suspend fun start(
@@ -35,8 +33,9 @@ internal class DownloadCoordinator(
         thumbnail: Bitmap?,
     ) {
         withContext(NonCancellable + Dispatchers.IO) {
-            database.withTransaction {
+            scheduling.withLock {
                 enqueue(request, thumbnail)
+                schedule()
             }
         }
     }
@@ -56,11 +55,11 @@ internal class DownloadCoordinator(
         restart: Boolean = false,
     ) {
         withContext(NonCancellable + Dispatchers.IO) {
-            database.withTransaction {
-                if (dao.requeue(id, restart) != 1) return@withTransaction
+            scheduling.withLock {
+                if (dao.requeue(id, restart) != 1) return@withLock
                 try {
                     if (restart) preserveAttempt(requireNotNull(dao.observe(id).first()))
-                    schedule(id)
+                    schedule()
                 } catch (_: IOException) {
                     dao.record(id, JobState.Queued, JobState.Failed, DownloadError.CannotResume, 0)
                 }
@@ -89,35 +88,46 @@ internal class DownloadCoordinator(
     }
 
     suspend fun reconcile() {
-        withContext(Dispatchers.IO) {
-            database.withTransaction {
-                val manager = WorkManager.getInstance(context)
-                val jobs = dao.queue().first()
-                for (job in jobs) {
-                    if (job.state == JobState.Saved || !manager.hasDownloadWork(job)) reconcileJob(job)
+        withContext(NonCancellable + Dispatchers.IO) {
+            scheduling.withLock {
+                val pending = scheduler.pending()
+                if (!pending && execution.tryLock()) {
+                    try {
+                        settleInterruptedActions(context, dao)
+                    } finally {
+                        execution.unlock()
+                    }
                 }
+                val recovered = dao.transitionQueue(setOf(JobState.AndroidPaused), JobState.Queued)
+                if (recovered > 0) notifications.clearAndroidPause()
+                if ((!pending || recovered > 0) && queue.first().any { it.state in RecoverableStates }) schedule()
             }
         }
     }
 
-    private suspend fun reconcileJob(job: DownloadJob) {
-        when (job.state) {
-            JobState.Pausing -> {
-                dao.transition(job.id, JobState.Pausing, JobState.Paused)
+    suspend fun next(
+        jobId: Int?,
+        finished: () -> Unit,
+    ): DownloadJob? =
+        scheduling.withLock {
+            val job = queue.first().firstOrNull { it.state in RecoverableStates }
+            if (job == null) {
+                scheduler.finishing(jobId)
+                finished()
             }
+            job
+        }
 
-            JobState.Cancelling -> {
-                deletePendingExport(context.contentResolver, job.contentUri)
-                File(job.stagingPath).deleteRecursively()
-                dao.transition(job.id, JobState.Cancelling, JobState.Cancelled)
-            }
-
-            in RecoverableStates -> {
-                schedule(job.id)
-            }
-
-            else -> {
-                Unit
+    suspend fun interrupted(
+        lostConnection: Boolean = false,
+        jobId: Int? = null,
+    ) {
+        scheduling.withLock {
+            if (lostConnection) {
+                dao.transitionQueue(setOf(JobState.Downloading, JobState.Merging), JobState.Waiting)
+            } else {
+                scheduler.finishing(jobId)
+                pauseForAndroid(dao, notifications)
             }
         }
     }
@@ -140,27 +150,56 @@ internal class DownloadCoordinator(
         val staging = File(context.noBackupFilesDir, "transfers/$id")
         val image = thumbnail?.let { File(context.noBackupFilesDir, "download-thumbnails/$id.png") }
         val job = request.toJob(id, staging, image)
-        dao.insert(job)
         if (image != null) writeThumbnail(image, thumbnail)
-        schedule(job.id)
+        dao.insert(job)
     }
 
-    private suspend fun schedule(id: String) {
-        val request =
-            OneTimeWorkRequestBuilder<DownloadWorker>()
-                .addTag(downloadTag(id))
-                .setInputData(workDataOf(DOWNLOAD_ID to id))
-                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
-                .build()
-        try {
-            WorkManager
-                .getInstance(context)
-                .enqueueUniqueWork(DOWNLOAD_QUEUE, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
-                .result
-                .get()
-        } catch (_: ExecutionException) {
-            dao.record(id, JobState.Queued, JobState.Failed, DownloadError.Unknown, 0)
+    private suspend fun schedule() {
+        if (!scheduler.schedule()) pauseForAndroid(dao, notifications)
+    }
+}
+
+private suspend fun pauseForAndroid(
+    dao: DownloadDao,
+    notifications: DownloadNotifications,
+) {
+    if (dao.transitionQueue(RecoverableStates, JobState.AndroidPaused) > 0) notifications.androidPaused()
+}
+
+private fun DownloadScheduler.finishing(jobId: Int?) {
+    if (jobId != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        (this as DataTransferScheduler).finishing(jobId)
+    }
+}
+
+internal suspend fun settleInterruptedActions(
+    context: Context,
+    dao: DownloadDao,
+) {
+    for (job in dao.queue().first()) {
+        if (job.state == JobState.Pausing || job.state == JobState.Cancelling) settleUserAction(context, dao, job.id)
+    }
+}
+
+internal suspend fun settleUserAction(
+    context: Context,
+    dao: DownloadDao,
+    id: String,
+) {
+    val job = dao.observe(id).first() ?: return
+    when (job.state) {
+        JobState.Pausing -> {
+            dao.transition(id, JobState.Pausing, JobState.Paused)
+        }
+
+        JobState.Cancelling -> {
+            deletePendingExport(context.contentResolver, job.contentUri)
+            File(job.stagingPath).deleteRecursively()
+            dao.transition(id, JobState.Cancelling, JobState.Cancelled)
+        }
+
+        else -> {
+            return
         }
     }
 }
@@ -194,13 +233,7 @@ private fun writeThumbnail(
     }
 }
 
-internal const val DOWNLOAD_ID = "download_id"
-private const val DOWNLOAD_QUEUE = "perseid.downloads"
 private const val PNG_QUALITY = 100
-
-internal fun downloadTag(id: String): String = "download:$id"
-
-private const val BACKOFF_SECONDS = 10L
 
 private fun preserveAttempt(job: DownloadJob) {
     val staging = File(job.stagingPath)
@@ -211,10 +244,4 @@ private fun preserveAttempt(job: DownloadJob) {
     for (file in files) {
         Files.move(file.toPath(), File(archive, file.name).toPath(), StandardCopyOption.ATOMIC_MOVE)
     }
-}
-
-private fun WorkManager.hasDownloadWork(job: DownloadJob): Boolean {
-    if (job.state !in RecoverableStates && job.state !in setOf(JobState.Pausing, JobState.Cancelling)) return true
-    return getWorkInfosByTag(downloadTag(job.id)).get().any { !it.state.isFinished } ||
-        getWorkInfoById(UUID.fromString(job.id)).get()?.state?.isFinished == false
 }
