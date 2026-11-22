@@ -20,6 +20,7 @@ import app.myownware.perseid.core.locale.appLanguage
 import app.myownware.perseid.core.locale.changeAppLanguage
 import app.myownware.perseid.core.locale.localizedContext
 import app.myownware.perseid.feature.download.DownloadViewModel
+import app.myownware.perseid.feature.library.LibraryViewModel
 import app.myownware.perseid.feature.settings.EngineUpdateViewModel
 import kotlinx.coroutines.launch
 
@@ -30,6 +31,12 @@ class MainActivity : ComponentActivity() {
                 val container = (application as PerseidApp).container
                 DownloadViewModel(container.previewEngine, downloads = container.downloads)
             }
+        }
+    }
+
+    private val library by viewModels<LibraryViewModel> {
+        viewModelFactory {
+            initializer { LibraryViewModel((application as PerseidApp).container.library) }
         }
     }
 
@@ -57,7 +64,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
             PerseidTheme(dark = dark) {
-                PerseidShell(appLanguage(this), ::selectLanguage, download, engineUpdate)
+                PerseidShell(
+                    appLanguage(this),
+                    ::selectLanguage,
+                    download,
+                    engineUpdate,
+                    library,
+                )
             }
         }
     }

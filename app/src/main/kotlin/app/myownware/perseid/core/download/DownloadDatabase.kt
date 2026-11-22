@@ -82,15 +82,6 @@ internal abstract class DownloadDao {
     @Query("SELECT * FROM downloads WHERE id = :id")
     abstract fun observe(id: String): Flow<DownloadJob?>
 
-    @Query("SELECT * FROM downloads WHERE state = 'Saved' ORDER BY finishedAt DESC, rowid DESC")
-    abstract fun library(): Flow<List<DownloadJob>>
-
-    @Query("DELETE FROM downloads WHERE id = :id AND state = 'Saved'")
-    abstract suspend fun removeSaved(id: String)
-
-    @Query("UPDATE downloads SET sizeBytes = :bytes WHERE id = :id AND state = 'Saved' AND sizeBytes IS NULL")
-    abstract suspend fun recordSavedSize(id: String, bytes: Long)
-
     @Insert
     abstract suspend fun insert(job: DownloadJob)
 
@@ -159,6 +150,27 @@ internal abstract class DownloadDao {
     )
 }
 
+@Dao
+internal interface LibraryDao {
+    @Query("SELECT * FROM downloads WHERE state = 'Saved' ORDER BY finishedAt DESC, rowid DESC")
+    fun library(): Flow<List<DownloadJob>>
+
+    @Query("DELETE FROM downloads WHERE id = :id AND state = 'Saved'")
+    suspend fun removeSaved(id: String)
+
+    @Query(
+        "UPDATE downloads SET sizeBytes = :bytes, author = COALESCE(author, :author), " +
+            "durationSeconds = COALESCE(durationSeconds, :duration) " +
+            "WHERE id = :id AND state = 'Saved' AND sizeBytes IS NULL",
+    )
+    suspend fun fillSavedMetadata(
+        id: String,
+        bytes: Long,
+        author: String?,
+        duration: Long?,
+    )
+}
+
 internal suspend fun DownloadDao.transition(
     id: String,
     expected: JobState,
@@ -172,4 +184,6 @@ internal suspend fun DownloadDao.transition(
 )
 internal abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloads(): DownloadDao
+
+    abstract fun library(): LibraryDao
 }

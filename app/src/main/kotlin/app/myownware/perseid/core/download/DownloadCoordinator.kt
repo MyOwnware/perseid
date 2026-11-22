@@ -3,6 +3,7 @@ package app.myownware.perseid.core.download
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
+import androidx.core.graphics.scale
 import androidx.room.withTransaction
 import app.myownware.perseid.core.engine.DownloadRequest
 import kotlinx.coroutines.Dispatchers
@@ -233,7 +234,7 @@ private fun writeThumbnail(
         val scale = minOf(1f, THUMBNAIL_EDGE.toFloat() / maxOf(thumbnail.width, thumbnail.height))
         val width = (thumbnail.width * scale).toInt().coerceAtLeast(1)
         val height = (thumbnail.height * scale).toInt().coerceAtLeast(1)
-        val image = Bitmap.createScaledBitmap(thumbnail, width, height, true)
+        val image = thumbnail.scale(width, height)
         try {
             file.outputStream().use { image.compress(Bitmap.CompressFormat.JPEG, THUMBNAIL_QUALITY, it) }
         } finally {

@@ -102,4 +102,12 @@
   <string name="engine_verification_failed">Update failed. The signature or checksum could not be verified.</string>
   <string name="engine_network_failed">Update failed. The GitHub release could not be retrieved.</string>
   <string name="engine_storage_failed">The engine could not be read or saved.</string>
+  <string name="library_all">All</string>
+  <string name="library_search">Search title or author</string>
+  <string name="library_no_results">No results</string>
+  <string name="library_no_results_description">Try another search or filter.</string>
+  <string name="library_delete">Delete</string>
+  <string name="library_delete_title">Delete this download?</string>
+  <string name="library_delete_message">“%1$s” will be removed from your phone.</string>
+  <string name="library_delete_failed">Could not delete this file.</string>
 </resources>

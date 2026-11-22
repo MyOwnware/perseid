@@ -103,4 +103,12 @@
   <string name="engine_verification_failed">Échec de la mise à jour. La signature ou la somme de contrôle n’a pas pu être vérifiée.</string>
   <string name="engine_network_failed">Échec de la mise à jour. Impossible de récupérer la version sur GitHub.</string>
   <string name="engine_storage_failed">Impossible de lire ou d’enregistrer le moteur.</string>
+  <string name="library_all">Tout</string>
+  <string name="library_search">Rechercher un titre ou un auteur</string>
+  <string name="library_no_results">Aucun résultat</string>
+  <string name="library_no_results_description">Essayez une autre recherche ou un autre filtre.</string>
+  <string name="library_delete">Supprimer</string>
+  <string name="library_delete_title">Supprimer ce téléchargement ?</string>
+  <string name="library_delete_message">« %1$s » sera supprimé de votre téléphone.</string>
+  <string name="library_delete_failed">Impossible de supprimer ce fichier.</string>
 </resources>

@@ -106,4 +106,12 @@
   <string name="engine_verification_failed">فشل التحديث. تعذّر التحقق من التوقيع أو البصمة الرقمية.</string>
   <string name="engine_network_failed">فشل التحديث. تعذّر جلب الإصدار من GitHub.</string>
   <string name="engine_storage_failed">تعذّرت قراءة المحرك أو حفظه.</string>
+  <string name="library_all">الكل</string>
+  <string name="library_search">ابحث بالعنوان أو المؤلف</string>
+  <string name="library_no_results">لا توجد نتائج</string>
+  <string name="library_no_results_description">جرّب بحثًا أو فلترًا آخر.</string>
+  <string name="library_delete">حذف</string>
+  <string name="library_delete_title">حذف هذا التنزيل؟</string>
+  <string name="library_delete_message">سيُحذف «%1$s» من هاتفك.</string>
+  <string name="library_delete_failed">تعذّر حذف هذا الملف.</string>
 </resources>
