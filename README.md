@@ -30,7 +30,9 @@ the Download screen and supports arm64-v8a devices and x86_64 emulators.
 
 ## Screenshots
 
-See [preview and quality selection screenshots](docs/design/) in French and Arabic.
+See [preview and quality selection screenshots](docs/design/) in French and Arabic and
+[download recovery screenshots](docs/design/download-06b/) in English, French and Arabic.
+The playback screenshot shows Big Buck Bunny, © 2008 Blender Foundation / www.bigbuckbunny.org. [CC BY 3.0 attribution](https://peach.blender.org/about/).
 
 ## License
 
@@ -43,3 +45,4 @@ Perseid is for personal use with media you are allowed to download. Respect copy
 ## Known limitations
 
 - Instagram: many posts require sign-in. Perseid works with posts the site makes accessible without signing in.
+- YouTube can reject a media request with HTTP 403 during a fresh download or a resume. If retries run out, Perseid keeps the partial files and offers **Start again** or **Cancel**. [Issue #9](https://github.com/MyOwnware/perseid/issues/9)
