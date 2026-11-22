@@ -55,13 +55,10 @@ import androidx.compose.ui.unit.dp
 import app.myownware.perseid.core.design.DesignMotion
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.PerseidTopBar
-import app.myownware.perseid.core.locale.AppLanguage
 import app.myownware.perseid.feature.download.DownloadScreen
 import app.myownware.perseid.feature.download.DownloadViewModel
 import app.myownware.perseid.feature.library.LibraryScreen
 import app.myownware.perseid.feature.library.LibraryViewModel
-import app.myownware.perseid.feature.settings.EngineUpdateViewModel
-import app.myownware.perseid.feature.settings.SettingsPlaceholder
 
 private enum class Destination(
     val title: Int,
@@ -74,11 +71,9 @@ private enum class Destination(
 
 @Composable
 internal fun PerseidShell(
-    language: AppLanguage,
-    onLanguage: (AppLanguage) -> Unit,
     download: DownloadViewModel,
-    engineUpdate: EngineUpdateViewModel,
     library: LibraryViewModel,
+    settingsContent: @Composable () -> Unit,
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     val state by download.state.collectAsState()
@@ -119,7 +114,7 @@ internal fun PerseidShell(
             } else {
                 DestinationContent(
                     destination,
-                    settingsContent = { SettingsPlaceholder(language, onLanguage, engineUpdate) },
+                    settingsContent = settingsContent,
                     downloadContent = { DownloadScreen(download, snackbars) },
                 )
             }

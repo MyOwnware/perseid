@@ -45,10 +45,12 @@ internal fun SecondaryButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     OutlinedButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier.heightIn(min = DesignSize.TouchTarget),
         shape = MaterialTheme.shapes.small,
         border = BorderStroke(1.dp, colors.outline),
