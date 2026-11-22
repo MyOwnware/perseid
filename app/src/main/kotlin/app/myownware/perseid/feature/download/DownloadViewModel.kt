@@ -37,6 +37,8 @@ internal data class DownloadUiState(
                 ready.media.title,
                 ready.media.thumbnailUrl,
                 option.merge,
+                ready.media.author,
+                ready.media.durationSeconds,
             )
         }
     }

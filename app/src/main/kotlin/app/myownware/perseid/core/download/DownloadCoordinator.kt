@@ -149,7 +149,7 @@ internal class DownloadCoordinator(
     ) {
         val id = UUID.randomUUID()
         val staging = File(context.noBackupFilesDir, "transfers/$id")
-        val image = thumbnail?.let { File(context.noBackupFilesDir, "download-thumbnails/$id.png") }
+        val image = thumbnail?.let { File(context.noBackupFilesDir, "download-thumbnails/$id.jpg") }
         val job = request.toJob(id, staging, image)
         if (image != null) writeThumbnail(image, thumbnail)
         dao.insert(job)
@@ -220,6 +220,8 @@ private fun DownloadRequest.toJob(
         staging.path,
         merge,
         System.currentTimeMillis(),
+        author = author,
+        durationSeconds = durationSeconds,
     )
 
 private fun writeThumbnail(
@@ -228,13 +230,22 @@ private fun writeThumbnail(
 ) {
     try {
         file.parentFile?.mkdirs()
-        file.outputStream().use { thumbnail.compress(Bitmap.CompressFormat.PNG, PNG_QUALITY, it) }
+        val scale = minOf(1f, THUMBNAIL_EDGE.toFloat() / maxOf(thumbnail.width, thumbnail.height))
+        val width = (thumbnail.width * scale).toInt().coerceAtLeast(1)
+        val height = (thumbnail.height * scale).toInt().coerceAtLeast(1)
+        val image = Bitmap.createScaledBitmap(thumbnail, width, height, true)
+        try {
+            file.outputStream().use { image.compress(Bitmap.CompressFormat.JPEG, THUMBNAIL_QUALITY, it) }
+        } finally {
+            if (image !== thumbnail) image.recycle()
+        }
     } catch (_: IOException) {
         // A missing thumbnail can use the standard media placeholder.
     }
 }
 
-private const val PNG_QUALITY = 100
+private const val THUMBNAIL_EDGE = 256
+private const val THUMBNAIL_QUALITY = 80
 
 private fun preserveAttempt(job: DownloadJob) {
     val staging = File(job.stagingPath)

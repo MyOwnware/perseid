@@ -116,4 +116,6 @@ internal data class DownloadRequest(
     val title: String,
     val thumbnailUrl: String?,
     val merge: TrackMerge?,
+    val author: String? = null,
+    val durationSeconds: Long? = null,
 )
