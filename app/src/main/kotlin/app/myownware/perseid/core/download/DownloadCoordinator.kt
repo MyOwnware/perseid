@@ -28,6 +28,7 @@ internal class DownloadCoordinator(
     private val scheduling = Mutex()
     internal val execution = Mutex()
     val queue = dao.queue()
+    val storage = UnfinishedStorage(database, scheduling)
 
     suspend fun start(
         request: DownloadRequest,

@@ -151,6 +151,12 @@ internal abstract class DownloadDao {
 }
 
 @Dao
+internal interface StorageDao {
+    @Query("SELECT * FROM downloads WHERE state IN ('Failed', 'Cancelled')")
+    suspend fun unfinished(): List<DownloadJob>
+}
+
+@Dao
 internal interface LibraryDao {
     @Query("SELECT * FROM downloads WHERE state = 'Saved' ORDER BY finishedAt DESC, rowid DESC")
     fun library(): Flow<List<DownloadJob>>
@@ -186,4 +192,6 @@ internal abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloads(): DownloadDao
 
     abstract fun library(): LibraryDao
+
+    abstract fun storage(): StorageDao
 }
