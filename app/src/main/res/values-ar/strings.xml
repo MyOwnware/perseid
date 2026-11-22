@@ -90,4 +90,20 @@
   <string name="download_start_again">البدء من جديد</string>
   <string name="download_cancel_restart">إلغاء</string>
   <string name="download_merging">جارٍ دمج الفيديو والصوت</string>
+  <string name="engine_installed">إصدار المحرك: %1$s</string>
+  <string name="engine_versions">الحالي: %1$s · المتاح: %2$s</string>
+  <string name="engine_restore">استعادة الإصدار السابق (%1$s)</string>
+  <string name="engine_check">التحقق من وجود تحديث</string>
+  <string name="engine_confirm">تنزيل التحديث وتثبيته</string>
+  <string name="engine_checking">جارٍ البحث عن تحديثات…</string>
+  <string name="engine_available">يتوفر تحديث.</string>
+  <string name="engine_up_to_date">المحرك محدّث.</string>
+  <string name="engine_updating">جارٍ تنزيل التحديث والتحقق منه…</string>
+  <string name="engine_waiting">بانتظار انتهاء التنزيلات…</string>
+  <string name="engine_updated">تم تحديث المحرك.</string>
+  <string name="engine_restored">تمت استعادة الإصدار السابق من المحرك.</string>
+  <string name="engine_offline">لا يوجد اتصال بالإنترنت.</string>
+  <string name="engine_verification_failed">فشل التحديث. تعذّر التحقق من التوقيع أو البصمة الرقمية.</string>
+  <string name="engine_network_failed">فشل التحديث. تعذّر جلب الإصدار من GitHub.</string>
+  <string name="engine_storage_failed">تعذّرت قراءة المحرك أو حفظه.</string>
 </resources>

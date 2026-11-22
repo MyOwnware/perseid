@@ -34,6 +34,10 @@ Python Software Foundation License version 2 and companion library licenses
 https://github.com/python/cpython/tree/v3.12.11
 https://github.com/yausername/youtubedl-android/blob/0.18.1/BUILD_PYTHON.md
 
+Bouncy Castle OpenPGP, Provider and Utilities 1.87
+Bouncy Castle License with Apache 2.0 BZIP2 code. See bouncycastle.txt.
+https://github.com/bcgit/bc-java/tree/r1rv87
+
 Jackson and Apache Commons
 Apache License version 2.0
 https://github.com/FasterXML/jackson/wiki/Jackson-Release-2.23

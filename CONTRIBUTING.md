@@ -11,3 +11,5 @@ PRs use rebase merge. The maintainer merges and creates release tags. Keep priva
 1. Download the Unix `yt-dlp` asset, `SHA2-256SUMS` and its signature from the [official release](https://github.com/yt-dlp/yt-dlp/releases).
 2. Check the signature with the [upstream signing key](https://github.com/yt-dlp/yt-dlp/blob/master/public.key). Match the asset's SHA-256 against the signed checksums.
 3. Replace `app/src/main/assets/engine/yt-dlp` and update its version and SHA-256 together in `app/build.gradle.kts`. Refresh the engine notices, run the Android checks and verify a fresh install offline before testing a download.
+
+The manual updater verifies the detached signature with Bouncy Castle OpenPGP 1.87 and a pinned yt-dlp key. Review any upstream signing-key change before updating the pin. [License notices](app/src/main/assets/licenses/bouncycastle.txt) · [Corresponding source](https://github.com/bcgit/bc-java/tree/r1rv87).

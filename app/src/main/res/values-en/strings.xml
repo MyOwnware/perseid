@@ -86,4 +86,20 @@
   <string name="download_start_again">Start again</string>
   <string name="download_cancel_restart">Cancel</string>
   <string name="download_merging">Joining video and audio</string>
+  <string name="engine_installed">Engine version: %1$s</string>
+  <string name="engine_versions">Current: %1$s · Available: %2$s</string>
+  <string name="engine_restore">Restore previous version (%1$s)</string>
+  <string name="engine_check">Check for update</string>
+  <string name="engine_confirm">Download and update</string>
+  <string name="engine_checking">Checking for updates…</string>
+  <string name="engine_available">An update is available.</string>
+  <string name="engine_up_to_date">The engine is up to date.</string>
+  <string name="engine_updating">Downloading and verifying the update…</string>
+  <string name="engine_waiting">Waiting for downloads to finish…</string>
+  <string name="engine_updated">The engine was updated.</string>
+  <string name="engine_restored">The previous engine was restored.</string>
+  <string name="engine_offline">No internet connection.</string>
+  <string name="engine_verification_failed">Update failed. The signature or checksum could not be verified.</string>
+  <string name="engine_network_failed">Update failed. The GitHub release could not be retrieved.</string>
+  <string name="engine_storage_failed">The engine could not be read or saved.</string>
 </resources>

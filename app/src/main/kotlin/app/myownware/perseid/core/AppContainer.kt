@@ -5,6 +5,7 @@ import androidx.room.Room
 import app.myownware.perseid.core.download.DownloadCoordinator
 import app.myownware.perseid.core.download.DownloadDatabase
 import app.myownware.perseid.core.download.YtDlpTransferEngine
+import app.myownware.perseid.core.engine.EngineUpdater
 import app.myownware.perseid.core.engine.PreviewEngine
 import app.myownware.perseid.core.engine.YtDlpPreviewEngine
 
@@ -16,6 +17,7 @@ class AppContainer(
     }
     internal val downloadDao get() = database.downloads()
     internal val downloads by lazy { DownloadCoordinator(context.applicationContext, database) }
+    internal val engineUpdater by lazy { EngineUpdater(context.applicationContext, downloads.execution) }
     internal val transferEngine by lazy { YtDlpTransferEngine(context.applicationContext) }
     internal val previewEngine: PreviewEngine = YtDlpPreviewEngine(context.applicationContext)
 }

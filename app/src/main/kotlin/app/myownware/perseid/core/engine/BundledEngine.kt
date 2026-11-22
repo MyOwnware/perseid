@@ -5,45 +5,91 @@ import app.myownware.perseid.BuildConfig
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import java.time.DateTimeException
 import java.time.LocalDate
 
 internal object BundledEngine {
-    private var prepared = false
+    private var store: EngineStore? = null
 
     @Synchronized
-    fun prepare(context: Context) {
-        if (prepared) return
+    fun prepare(context: Context): EngineSelection {
+        store?.selection()?.let { return it }
+        val executable = File(context.noBackupFilesDir, "youtubedl-android/yt-dlp/yt-dlp")
+        val existing = executable.exists()
         YoutubeDL.init(context)
-        val versionRequest = YoutubeDLRequest(emptyList<String>()).apply { addOption("--version") }
-        val installedVersion = YoutubeDL.execute(versionRequest).out.trim()
-        if (shouldInstallBundled(installedVersion, BuildConfig.BUNDLED_YT_DLP_VERSION)) {
-            val installed = File(context.noBackupFilesDir, "youtubedl-android/yt-dlp/yt-dlp")
-            installBundled(context, installed)
+        val storage = EngineStore(File(context.noBackupFilesDir, "download-engine"), executable)
+        val selection = initialize(context, storage, executable, existing)
+        store = storage
+        return selection
+    }
+
+    @Synchronized
+    fun activate(
+        context: Context,
+        version: String,
+        candidate: File,
+    ): EngineSelection {
+        if (Thread.interrupted()) throw InterruptedException()
+        val active = prepare(context)
+        if (!shouldInstallBundled(active.current, version)) return active
+        val storage = requireNotNull(store)
+        candidate.inputStream().use { storage.save(version, it) }
+        return active.copy(current = version, previous = active.current).also(storage::select)
+    }
+
+    @Synchronized
+    fun restore(context: Context): EngineSelection {
+        if (Thread.interrupted()) throw InterruptedException()
+        prepare(context)
+        return requireNotNull(store).restore()
+    }
+
+    @Synchronized
+    fun execute(
+        request: YoutubeDLRequest,
+        processId: String,
+    ) = YoutubeDL.execute(request, processId)
+
+    private fun initialize(
+        context: Context,
+        storage: EngineStore,
+        executable: File,
+        existing: Boolean,
+    ): EngineSelection {
+        val bundled = BuildConfig.BUNDLED_YT_DLP_VERSION
+        val selected = storage.selection()
+        if (selected != null && selected.bundleSeen == bundled) {
+            storage.sync(selected)
+            return selected
         }
-        prepared = true
+        val current = selected?.current ?: installedVersion()
+        if (selected == null && (existing || !shouldInstallBundled(current, bundled))) {
+            executable.inputStream().use { storage.save(current, it) }
+        }
+        val updated = selectBundle(context, storage, selected, current, existing)
+        storage.select(updated)
+        return updated
+    }
+
+    private fun selectBundle(
+        context: Context,
+        storage: EngineStore,
+        selected: EngineSelection?,
+        current: String,
+        existing: Boolean,
+    ): EngineSelection {
+        val bundled = BuildConfig.BUNDLED_YT_DLP_VERSION
+        if (!shouldInstallBundled(current, bundled)) {
+            return EngineSelection(current, selected?.previous, bundled)
+        }
+        context.assets.open("engine/yt-dlp").use { storage.save(bundled, it) }
+        return EngineSelection(bundled, current.takeIf { existing || selected != null }, bundled)
     }
 }
 
-private fun installBundled(
-    context: Context,
-    installed: File,
-) {
-    val pending = File.createTempFile("yt-dlp-", ".tmp", installed.parentFile)
-    try {
-        context.assets.open("engine/yt-dlp").use { source ->
-            pending.outputStream().use { source.copyTo(it) }
-        }
-        Files.move(
-            pending.toPath(),
-            installed.toPath(),
-            StandardCopyOption.ATOMIC_MOVE,
-            StandardCopyOption.REPLACE_EXISTING,
-        )
-    } finally {
-        pending.delete()
-    }
+private fun installedVersion(): String {
+    val request = YoutubeDLRequest(emptyList<String>()).apply { addOption("--version") }
+    return YoutubeDL.execute(request).out.trim()
 }
 
 internal fun shouldInstallBundled(
@@ -51,8 +97,19 @@ internal fun shouldInstallBundled(
     bundled: String,
 ): Boolean = engineDate(installed) < engineDate(bundled)
 
+internal fun isEngineVersion(version: String): Boolean {
+    if (!VERSION_PATTERN.matches(version)) return false
+    return try {
+        engineDate(version)
+        true
+    } catch (_: DateTimeException) {
+        false
+    }
+}
+
 private fun engineDate(version: String): LocalDate {
-    val date = version.split('.')
-    val (year, month, day) = date
+    val (year, month, day) = version.split('.')
     return LocalDate.of(year.toInt(), month.toInt(), day.toInt())
 }
+
+private val VERSION_PATTERN = Regex("[0-9]{4}\\.[0-9]{1,2}\\.[0-9]{1,2}")

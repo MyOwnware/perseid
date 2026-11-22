@@ -10,7 +10,8 @@ Perseid is the first app in MyOwnware. It is planned to keep download history, p
 - Choose Audio or Video from the available formats. Video defaults to the best available quality up to 1080p when available. Audio prefers m4a and otherwise keeps the best available audio format.
 - Planned — download in the background, pause, resume and save to Download/Perseid/.
 - Planned — search, play, share and delete downloads from a local library.
-- Planned — change theme and download defaults and update the engine manually.
+- Update or restore the download engine from Settings.
+- Planned — change theme and download defaults.
 
 ## Install
 
@@ -45,4 +46,4 @@ Perseid is for personal use with media you are allowed to download. Respect copy
 ## Known limitations
 
 - Instagram: many posts require sign-in. Perseid works with posts the site makes accessible without signing in.
-- YouTube can reject a media request with HTTP 403 during a fresh download or a resume. If retries run out, Perseid keeps the partial files and offers **Start again** or **Cancel**. [Issue #9](https://github.com/MyOwnware/perseid/issues/9)
+- An outdated engine can receive HTTP 403 during a YouTube download or resume. Check for an engine update in Settings. If retries run out, Perseid keeps the partial files and offers **Start again** or **Cancel**. [Issue #9](https://github.com/MyOwnware/perseid/issues/9)

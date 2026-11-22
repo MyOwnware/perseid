@@ -1,7 +1,6 @@
 package app.myownware.perseid.core.engine
 
 import android.content.Context
-import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +50,7 @@ internal class YtDlpPreviewEngine(
             }
         val response =
             try {
-                YoutubeDL.execute(request, UUID.randomUUID().toString())
+                BundledEngine.execute(request, UUID.randomUUID().toString())
             } catch (failure: YoutubeDLException) {
                 val error = classifyPreviewError(failure.message.orEmpty(), URI.create(url).host)
                 throw PreviewFailure(error, failure)

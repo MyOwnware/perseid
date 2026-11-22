@@ -59,6 +59,7 @@ import app.myownware.perseid.core.locale.AppLanguage
 import app.myownware.perseid.feature.download.DownloadScreen
 import app.myownware.perseid.feature.download.DownloadViewModel
 import app.myownware.perseid.feature.library.LibraryPlaceholder
+import app.myownware.perseid.feature.settings.EngineUpdateViewModel
 import app.myownware.perseid.feature.settings.SettingsPlaceholder
 
 private enum class Destination(
@@ -75,6 +76,7 @@ internal fun PerseidShell(
     language: AppLanguage,
     onLanguage: (AppLanguage) -> Unit,
     download: DownloadViewModel,
+    engineUpdate: EngineUpdateViewModel,
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Download) }
     val state by download.state.collectAsState()
@@ -103,8 +105,7 @@ internal fun PerseidShell(
         ) {
             DestinationContent(
                 destination,
-                language,
-                onLanguage,
+                settingsContent = { SettingsPlaceholder(language, onLanguage, engineUpdate) },
                 downloadContent = { DownloadScreen(download, snackbars) },
                 onDownload = { destination = Destination.Download },
             )
@@ -115,8 +116,7 @@ internal fun PerseidShell(
 @Composable
 private fun DestinationContent(
     destination: Destination,
-    language: AppLanguage,
-    onLanguage: (AppLanguage) -> Unit,
+    settingsContent: @Composable () -> Unit,
     downloadContent: @Composable () -> Unit,
     onDownload: () -> Unit,
 ) {
@@ -130,7 +130,7 @@ private fun DestinationContent(
         when (destination) {
             Destination.Download -> downloadContent()
             Destination.Library -> LibraryPlaceholder(onDownload)
-            Destination.Settings -> SettingsPlaceholder(language, onLanguage)
+            Destination.Settings -> settingsContent()
         }
     }
 }
