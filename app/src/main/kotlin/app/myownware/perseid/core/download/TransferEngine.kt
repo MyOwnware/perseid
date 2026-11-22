@@ -66,14 +66,14 @@ internal class YtDlpTransferEngine(
                 checkPartial(file, staged)
                 HttpTransfer(http, file) { requireStorage(context, directory, it) }.download(progress)
             } else {
-                if (staged) throw DownloadFailure(DownloadError.CannotResume)
+                if (staged) cannotResume(ResumeRefusal.FragmentedTrack)
                 fetchFragmented(job, format, index, progress)
             }
         } catch (failure: YoutubeDLException) {
             val message = failure.message.orEmpty()
             val error =
                 if (staged && message.contains("requested format", ignoreCase = true)) {
-                    DownloadError.CannotResume
+                    cannotResume(ResumeRefusal.FormatUnavailable, failure)
                 } else {
                     classifyDownloadError(message)
                 }
@@ -135,7 +135,7 @@ private fun checkPartial(
     staged: Boolean,
 ) {
     val partial = File(output.parentFile, "${output.name}.part")
-    if (staged && partial.length() == 0L) throw DownloadFailure(DownloadError.CannotResume)
+    if (staged && partial.length() == 0L) cannotResume(ResumeRefusal.PartialFileMissing)
 }
 
 private fun fetchFragmented(
