@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -66,9 +67,10 @@ internal fun LibraryRow(
                 LibraryMetadata(item)
             }
         }
+        val actions = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = onShare) { Text(stringResource(R.string.download_share)) }
-            TextButton(onClick = onDelete) { Text(stringResource(R.string.library_delete)) }
+            TextButton(onClick = onShare, colors = actions) { Text(stringResource(R.string.download_share)) }
+            TextButton(onClick = onDelete, colors = actions) { Text(stringResource(R.string.library_delete)) }
         }
     }
 }
