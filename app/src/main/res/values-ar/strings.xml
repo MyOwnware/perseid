@@ -86,7 +86,8 @@
     <item quantity="other">+%1$d في قائمة الانتظار</item>
   </plurals>
   <string name="download_retrying">ستتم إعادة المحاولة</string>
-  <string name="download_resume_blocked">تغيّر المصدر أو رفض متابعة التنزيل. تم الاحتفاظ بالملف الجزئي.</string>
+  <string name="download_resume_blocked">لا يمكن متابعة هذا التنزيل.</string>
   <string name="download_start_again">البدء من جديد</string>
+  <string name="download_cancel_restart">إلغاء</string>
   <string name="download_merging">جارٍ دمج الفيديو والصوت</string>
 </resources>

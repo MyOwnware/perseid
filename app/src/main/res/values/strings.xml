@@ -83,7 +83,8 @@
     <item quantity="other">+%1$d en attente</item>
   </plurals>
   <string name="download_retrying">Nouvelle tentative prévue</string>
-  <string name="download_resume_blocked">La source a changé ou a refusé la reprise. Le fichier partiel est conservé.</string>
+  <string name="download_resume_blocked">Ce téléchargement ne peut pas reprendre.</string>
   <string name="download_start_again">Recommencer</string>
+  <string name="download_cancel_restart">Annuler</string>
   <string name="download_merging">Assemblage de la vidéo et de l’audio</string>
 </resources>

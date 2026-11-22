@@ -82,7 +82,8 @@
     <item quantity="other">+%1$d queued</item>
   </plurals>
   <string name="download_retrying">Retry scheduled</string>
-  <string name="download_resume_blocked">The source changed or would not continue. Your partial file was kept.</string>
+  <string name="download_resume_blocked">This download can’t continue.</string>
   <string name="download_start_again">Start again</string>
+  <string name="download_cancel_restart">Cancel</string>
   <string name="download_merging">Joining video and audio</string>
 </resources>

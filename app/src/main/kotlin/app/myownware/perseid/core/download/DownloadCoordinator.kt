@@ -56,9 +56,10 @@ internal class DownloadCoordinator(
     ) {
         withContext(NonCancellable + Dispatchers.IO) {
             scheduling.withLock {
-                if (dao.requeue(id, restart) != 1) return@withLock
+                val job = dao.observe(id).first() ?: return@withLock
+                if (job.requiresRestart != restart || dao.requeue(id) != 1) return@withLock
                 try {
-                    if (restart) preserveAttempt(requireNotNull(dao.observe(id).first()))
+                    if (restart) preserveAttempt(job)
                     schedule()
                 } catch (_: IOException) {
                     dao.record(id, JobState.Queued, JobState.Failed, DownloadError.CannotResume, 0)
