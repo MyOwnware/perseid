@@ -94,7 +94,7 @@ internal class DownloadRunner(
         if (dao.beginPublishing(job.id) != 1) return
         val saved = save(job, media)
         withContext(NonCancellable) {
-            dao.saved(job.id, saved.uri.toString(), saved.mime, System.currentTimeMillis())
+            dao.saved(job.id, saved.uri.toString(), saved.mime, System.currentTimeMillis(), media.length())
             withContext(Dispatchers.IO) { File(job.stagingPath).deleteRecursively() }
             notifications.saved(job, saved)
         }

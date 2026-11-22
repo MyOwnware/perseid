@@ -18,7 +18,7 @@ internal data class SavedMedia(
     val mime: String,
 )
 
-private const val DOWNLOAD_PATH = "Download/Perseid/"
+internal const val DOWNLOAD_PATH = "Download/Perseid/"
 
 internal suspend fun reserveExport(
     resolver: ContentResolver,

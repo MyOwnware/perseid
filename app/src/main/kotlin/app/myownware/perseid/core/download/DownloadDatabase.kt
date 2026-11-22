@@ -51,6 +51,9 @@ internal data class DownloadJob(
     val finishedAt: Long? = null,
     val error: DownloadError? = null,
     @ColumnInfo(defaultValue = "0") val retries: Int = 0,
+    val author: String? = null,
+    val durationSeconds: Long? = null,
+    val sizeBytes: Long? = null,
 ) {
     val canCancel get() = state !in setOf(JobState.Publishing, JobState.Cancelling, JobState.Saved, JobState.Cancelled)
     val active
@@ -78,6 +81,15 @@ internal abstract class DownloadDao {
 
     @Query("SELECT * FROM downloads WHERE id = :id")
     abstract fun observe(id: String): Flow<DownloadJob?>
+
+    @Query("SELECT * FROM downloads WHERE state = 'Saved' ORDER BY finishedAt DESC, rowid DESC")
+    abstract fun library(): Flow<List<DownloadJob>>
+
+    @Query("DELETE FROM downloads WHERE id = :id AND state = 'Saved'")
+    abstract suspend fun removeSaved(id: String)
+
+    @Query("UPDATE downloads SET sizeBytes = :bytes WHERE id = :id AND state = 'Saved' AND sizeBytes IS NULL")
+    abstract suspend fun recordSavedSize(id: String, bytes: Long)
 
     @Insert
     abstract suspend fun insert(job: DownloadJob)
@@ -134,7 +146,8 @@ internal abstract class DownloadDao {
     )
 
     @Query(
-        "UPDATE downloads SET state = 'Saved', progress = 100, contentUri = :uri, mimeType = :mime, finishedAt = :at " +
+        "UPDATE downloads SET state = 'Saved', progress = 100, contentUri = :uri, mimeType = :mime, " +
+            "finishedAt = :at, sizeBytes = :bytes " +
             "WHERE id = :id AND state = 'Publishing'",
     )
     abstract suspend fun saved(
@@ -142,6 +155,7 @@ internal abstract class DownloadDao {
         uri: String,
         mime: String,
         at: Long,
+        bytes: Long,
     )
 }
 
@@ -153,8 +167,8 @@ internal suspend fun DownloadDao.transition(
 
 @Database(
     entities = [DownloadJob::class],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    version = 3,
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 internal abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloads(): DownloadDao
