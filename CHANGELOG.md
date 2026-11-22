@@ -1,6 +1,31 @@
 # Changelog
 
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.3.0] - 2026-11-22
+
+
+### New
+
+- remember theme and download defaults
+
+- clear partial files from unfinished downloads
+
+- complete the settings screen and offline notices
+
+
+### Fixes
+
+- keep version numbers readable in arabic
+
+
+### Under the hood
+
+- record settings storage and release follow-up
+
+- describe cleanup and offline settings scope
+
+- capture french and arabic settings screens
+
 ## [0.2.0] - 2026-11-22
 
 
