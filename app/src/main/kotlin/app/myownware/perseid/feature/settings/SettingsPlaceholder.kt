@@ -17,6 +17,9 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,22 +58,44 @@ private enum class Setting(
 internal fun SettingsPlaceholder(
     language: AppLanguage,
     onLanguage: (AppLanguage) -> Unit,
+    engine: EngineUpdateViewModel,
 ) {
+    val state by engine.state.collectAsState()
+    LaunchedEffect(engine) { engine.refresh() }
+    DisposableEffect(engine) { onDispose(engine::close) }
     var open by rememberSaveable { mutableStateOf<Setting?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         SettingsGroup(R.string.settings_appearance, listOf(Setting.Theme, Setting.Language), language) { open = it }
         SettingsGroup(R.string.settings_downloads, listOf(Setting.Choice, Setting.Quality), language) { open = it }
         val appItems = listOf(Setting.Engine, Setting.Privacy, Setting.Licenses, Setting.About)
-        SettingsGroup(R.string.settings_app, appItems, language) { open = it }
+        SettingsGroup(R.string.settings_app, appItems, language, state.installed) {
+            open = it
+            if (it == Setting.Engine) engine.check()
+        }
     }
     val setting = open ?: return
-    if (setting == Setting.Language) {
-        LanguageDialog(language, onClose = { open = null }) { choice ->
-            open = null
-            onLanguage(choice)
+    when (setting) {
+        Setting.Language -> {
+            LanguageDialog(language, onClose = { open = null }) { choice ->
+                open = null
+                onLanguage(choice)
+            }
         }
-    } else {
-        SettingInfoDialog(setting) { open = null }
+
+        Setting.Engine -> {
+            EngineUpdateDialog(engine, state) {
+                engine.close()
+                open = null
+            }
+        }
+
+        Setting.Licenses -> {
+            LicensesDialog { open = null }
+        }
+
+        else -> {
+            SettingInfoDialog(setting, state.installed) { open = null }
+        }
     }
 }
 
@@ -79,12 +104,13 @@ private fun SettingsGroup(
     title: Int,
     items: List<Setting>,
     language: AppLanguage,
+    engineVersion: String? = null,
     onOpen: (Setting) -> Unit,
 ) {
     SettingsSection(stringResource(title)) {
         for ((index, item) in items.withIndex()) {
             if (index > 0) SettingsDivider()
-            SettingRow(stringResource(item.title), settingValue(item, language)) { onOpen(item) }
+            SettingRow(stringResource(item.title), settingValue(item, language, engineVersion)) { onOpen(item) }
         }
     }
 }
@@ -93,6 +119,7 @@ private fun SettingsGroup(
 private fun settingValue(
     item: Setting,
     language: AppLanguage,
+    engineVersion: String?,
 ): String? =
     when (item) {
         Setting.Theme -> {
@@ -112,6 +139,10 @@ private fun settingValue(
             stringResource(R.string.settings_quality_default, resolution)
         }
 
+        Setting.Engine -> {
+            engineVersion
+        }
+
         Setting.About -> {
             BuildConfig.VERSION_NAME
         }
@@ -124,15 +155,26 @@ private fun settingValue(
 @Composable
 private fun SettingInfoDialog(
     setting: Setting,
+    engineVersion: String,
     onClose: () -> Unit,
 ) {
     val title = if (setting == Setting.About) R.string.app_name else setting.title
     val message =
         when (setting) {
-            Setting.About -> stringResource(R.string.settings_version, BuildConfig.VERSION_NAME)
-            Setting.Privacy -> stringResource(R.string.settings_privacy_summary)
-            Setting.Licenses -> stringResource(R.string.settings_licenses_summary)
-            else -> stringResource(R.string.settings_later)
+            Setting.About -> {
+                listOf(
+                    stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
+                    stringResource(R.string.engine_installed, engineVersion),
+                ).joinToString("\n")
+            }
+
+            Setting.Privacy -> {
+                stringResource(R.string.settings_privacy_summary)
+            }
+
+            else -> {
+                stringResource(R.string.settings_later)
+            }
         }
     SettingsDialog(stringResource(title), onClose) { Text(message) }
 }
@@ -173,7 +215,7 @@ private fun LanguageOption(
 }
 
 @Composable
-private fun SettingsDialog(
+internal fun SettingsDialog(
     title: String,
     onClose: () -> Unit,
     content: @Composable () -> Unit,

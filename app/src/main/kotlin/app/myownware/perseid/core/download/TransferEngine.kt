@@ -92,7 +92,7 @@ internal class YtDlpTransferEngine(
                 addOption("--no-check-formats")
                 addOption("--dump-single-json")
             }
-        val metadata = readMetadata(YoutubeDL.execute(request, "${job.id}-$index-metadata").out)
+        val metadata = readMetadata(BundledEngine.execute(request, "${job.id}-$index-metadata").out)
         return resolveTrack(metadata, format)
     }
 }

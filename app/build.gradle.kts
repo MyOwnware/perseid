@@ -67,6 +67,7 @@ android {
     }
 
     packaging {
+        resources.pickFirsts += "META-INF/LICENSE.md"
         jniLibs {
             // The engine starts its bundled executables through the native library directory.
             useLegacyPackaging = true
@@ -97,6 +98,7 @@ dependencies {
         exclude(group = "androidx.appcompat", module = "appcompat")
     }
     implementation(libs.jackson.databind)
+    implementation(libs.bouncycastle.openpgp)
     implementation(libs.commons.compress)
     implementation(libs.commons.io)
     implementation(platform(libs.compose.bom))

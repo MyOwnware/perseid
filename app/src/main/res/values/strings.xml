@@ -87,4 +87,20 @@
   <string name="download_start_again">Recommencer</string>
   <string name="download_cancel_restart">Annuler</string>
   <string name="download_merging">Assemblage de la vidéo et de l’audio</string>
+  <string name="engine_installed">Version du moteur : %1$s</string>
+  <string name="engine_versions">Actuelle : %1$s · Disponible : %2$s</string>
+  <string name="engine_restore">Restaurer la version précédente (%1$s)</string>
+  <string name="engine_check">Rechercher une mise à jour</string>
+  <string name="engine_confirm">Télécharger et mettre à jour</string>
+  <string name="engine_checking">Recherche de mises à jour…</string>
+  <string name="engine_available">Une mise à jour est disponible.</string>
+  <string name="engine_up_to_date">Le moteur est à jour.</string>
+  <string name="engine_updating">Téléchargement et vérification de la mise à jour…</string>
+  <string name="engine_waiting">En attente de la fin des téléchargements…</string>
+  <string name="engine_updated">Le moteur a été mis à jour.</string>
+  <string name="engine_restored">La version précédente du moteur a été restaurée.</string>
+  <string name="engine_offline">Pas de connexion Internet.</string>
+  <string name="engine_verification_failed">Échec de la mise à jour. La signature ou la somme de contrôle n’a pas pu être vérifiée.</string>
+  <string name="engine_network_failed">Échec de la mise à jour. Impossible de récupérer la version sur GitHub.</string>
+  <string name="engine_storage_failed">Impossible de lire ou d’enregistrer le moteur.</string>
 </resources>

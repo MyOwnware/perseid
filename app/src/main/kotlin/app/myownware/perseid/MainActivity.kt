@@ -20,6 +20,7 @@ import app.myownware.perseid.core.locale.appLanguage
 import app.myownware.perseid.core.locale.changeAppLanguage
 import app.myownware.perseid.core.locale.localizedContext
 import app.myownware.perseid.feature.download.DownloadViewModel
+import app.myownware.perseid.feature.settings.EngineUpdateViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -29,6 +30,12 @@ class MainActivity : ComponentActivity() {
                 val container = (application as PerseidApp).container
                 DownloadViewModel(container.previewEngine, downloads = container.downloads)
             }
+        }
+    }
+
+    private val engineUpdate by viewModels<EngineUpdateViewModel> {
+        viewModelFactory {
+            initializer { EngineUpdateViewModel((application as PerseidApp).container.engineUpdater) }
         }
     }
 
@@ -50,7 +57,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
             PerseidTheme(dark = dark) {
-                PerseidShell(appLanguage(this), ::selectLanguage, download)
+                PerseidShell(appLanguage(this), ::selectLanguage, download, engineUpdate)
             }
         }
     }
@@ -62,6 +69,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        engineUpdate.close()
         if (!isChangingConfigurations) download.cancelPreview()
     }
 
