@@ -1,12 +1,37 @@
 # Changelog
 
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.1.0] - 2026-11-22
+## [0.2.0] - 2026-11-22
 
 
 ### New
 
-- add the compose application skeleton
+- persist saved media details for the library
+
+- browse and manage saved downloads
+
+
+### Fixes
+
+- keep release notes focused on user changes
+
+- group legacy maintenance commits under the hood
+
+- keep fast search input in sync
+
+- show finished files on android 10–13 without reopening
+
+- improve action and dialog text contrast
+
+
+### Under the hood
+
+- capture french and arabic library states
+
+## [0.1.0] - 2026-11-22
+
+
+### New
 
 - exclude app data from android backup
 
@@ -23,8 +48,6 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - add french arabic and english app languages
 
 - preview pasted and shared media links
-
-- map preview formats to media options
 
 - localize media selection labels
 
@@ -49,12 +72,6 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ### Fixes
 
-- use the runner with the android sdk
-
-- align preview options with kotlin formatting
-
-- avoid boxing the shared link counter
-
 - explain instagram sign-in requirements
 
 - narrow refused ranges at the saved offset
@@ -62,8 +79,6 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - ask before restarting after retries
 
 - complete verified youtube engine rollout
-
-- record resume refusals in debug logs
 
 
 ### Under the hood
@@ -88,6 +103,8 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 - bootstrap the android build
 
+- add the compose application skeleton
+
 - enforce quality checks and verify backup rules
 
 - build and check pull requests
@@ -95,6 +112,8 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - schedule weekly dependency updates
 
 - document the android build
+
+- use the runner with the android sdk
 
 - bump actions/setup-java from 6.2.0 to 6.3.0
 
@@ -107,6 +126,12 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - add the bundled metadata extractor
 
 - document privacy and add localized screenshots
+
+- align preview options with kotlin formatting
+
+- avoid boxing the shared link counter
+
+- map preview formats to media options
 
 - cover media selection with format fixtures
 
@@ -129,5 +154,7 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - reuse checks and validate signing inputs
 
 - describe verified apk installation
+
+- record resume refusals in debug logs
 
 - publish signed apk releases from tags
