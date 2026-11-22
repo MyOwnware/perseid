@@ -9,11 +9,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -122,12 +124,19 @@ private fun LibrarySearch(
     filter: LibraryFilter,
     onFilter: (LibraryFilter) -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     OutlinedTextField(
         search,
         onSearch,
         Modifier.fillMaxWidth(),
         label = { Text(stringResource(R.string.library_search)) },
         singleLine = true,
+        shape = MaterialTheme.shapes.small,
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.onSurface,
+                focusedLabelColor = colors.onSurface,
+            ),
     )
     FlowRow(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(DesignSize.Small)) {
         for (option in LibraryFilter.entries) {
@@ -138,8 +147,8 @@ private fun LibrarySearch(
                 modifier = Modifier.heightIn(min = DesignSize.TouchTarget),
                 colors =
                     FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        selectedContainerColor = colors.primary.copy(alpha = 0.20f),
+                        selectedLabelColor = colors.onSurface,
                     ),
             )
         }
@@ -152,12 +161,22 @@ private fun ConfirmLibraryDelete(
     onCancel: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onCancel,
+        containerColor = colors.surface,
         title = { Text(stringResource(R.string.library_delete_title)) },
         text = { Text(stringResource(R.string.library_delete_message, title)) },
-        confirmButton = { TextButton(onClick = onDelete) { Text(stringResource(R.string.library_delete)) } },
-        dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.download_cancel_restart)) } },
+        confirmButton = {
+            TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = colors.error)) {
+                Text(stringResource(R.string.library_delete))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel, colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurface)) {
+                Text(stringResource(R.string.download_cancel_restart))
+            }
+        },
     )
 }
 
