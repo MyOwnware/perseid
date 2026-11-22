@@ -47,7 +47,7 @@ internal class HttpTransfer(
     }
 
     private fun loadCheckpoint(offset: Long): Checkpoint {
-        if (!checkpoint.isFile) cannotResume()
+        if (!checkpoint.isFile) cannotResume(ResumeRefusal.MissingCheckpoint)
         val values = Properties().apply { checkpoint.inputStream().use(::load) }
         val saved =
             Checkpoint(
@@ -55,8 +55,11 @@ internal class HttpTransfer(
                 values.getProperty("length")?.toLongOrNull(),
                 values.getProperty("etag"),
             )
-        if (saved.identity != source.identity || saved.length?.let { offset > it } == true) cannotResume()
-        if (source.length != null && saved.length != null && source.length != saved.length) cannotResume()
+        if (saved.identity != source.identity) cannotResume(ResumeRefusal.SourceIdentityChanged)
+        if (saved.length?.let { offset > it } == true) cannotResume(ResumeRefusal.PartialExceedsCheckpoint)
+        if (source.length != null && saved.length != null && source.length != saved.length) {
+            cannotResume(ResumeRefusal.SourceLengthChanged)
+        }
         return saved
     }
 
@@ -72,7 +75,8 @@ internal class HttpTransfer(
                 first =
                     rangeRequest(first, offset - 1, saved.etag) { connection, last ->
                         val range = connection.range(first, last, saved.length)
-                        if (range.last != last || !verifyValidator(connection, saved)) cannotResume()
+                        if (range.last != last) cannotResume(ResumeRefusal.PrefixRangeTruncated)
+                        if (!verifyValidator(connection, saved)) cannotResume(ResumeRefusal.ValidatorChanged)
                         if (saved.etag != null) return
                         connection.inputStream.use { stream ->
                             comparePrefix(local, stream, bytes, remote, last - first + 1)
@@ -134,8 +138,8 @@ internal class HttpTransfer(
         expected: Long?,
         total: Long?,
     ): Checkpoint {
-        if (expected != null && total != null && expected != total) cannotResume()
-        if (saved != null && !verifyValidator(connection, saved)) cannotResume()
+        if (expected != null && total != null && expected != total) cannotResume(ResumeRefusal.SourceLengthChanged)
+        if (saved != null && !verifyValidator(connection, saved)) cannotResume(ResumeRefusal.ValidatorChanged)
         return saved?.copy(length = total ?: expected)
             ?: Checkpoint(source.identity, total ?: expected, connection.strongEtag())
     }
@@ -204,7 +208,9 @@ internal class HttpTransfer(
             etag?.let { connection.setRequestProperty("If-Range", it) }
             handleResponseCode(connection.responseCode, first)
             val encoding = connection.getHeaderField("Content-Encoding")
-            if (encoding != null && !encoding.equals("identity", ignoreCase = true)) cannotResume()
+            if (encoding != null && !encoding.equals("identity", ignoreCase = true)) {
+                cannotResume(ResumeRefusal.UnexpectedEncoding)
+            }
             return block(connection)
         } finally {
             connection.disconnect()
@@ -229,12 +235,16 @@ private fun HttpURLConnection.range(
     last: Long,
     length: Long?,
 ): RangeReply {
-    val parts = getHeaderField("Content-Range")?.let(RangePattern::matchEntire)?.groupValues ?: cannotResume()
+    val header = getHeaderField("Content-Range")
+    val range = header?.let(RangePattern::matchEntire) ?: cannotResume(ResumeRefusal.InvalidContentRange)
+    val parts = range.groupValues
     val (start, endText, totalText) = parts.drop(1)
-    val end = endText.toLongOrNull() ?: cannotResume()
-    val total = totalText.toLongOrNull() ?: cannotResume()
-    if (start.toLongOrNull() != first || end !in first..last || end >= total) cannotResume()
-    if (length != null && total != length) cannotResume()
+    val end = endText.toLongOrNull() ?: cannotResume(ResumeRefusal.InvalidContentRange)
+    val total = totalText.toLongOrNull() ?: cannotResume(ResumeRefusal.InvalidContentRange)
+    if (start.toLongOrNull() != first || end !in first..last || end >= total) {
+        cannotResume(ResumeRefusal.UnexpectedRangeBounds)
+    }
+    if (length != null && total != length) cannotResume(ResumeRefusal.SourceLengthChanged)
     return RangeReply(end, total)
 }
 
@@ -251,7 +261,7 @@ private fun comparePrefix(
         val count = minOf(remaining, left.size.toLong()).toInt()
         java.io.DataInputStream(local).readFully(left, 0, count)
         java.io.DataInputStream(remote).readFully(right, 0, count)
-        if (!left.regionMatches(right, count)) cannotResume()
+        if (!left.regionMatches(right, count)) cannotResume(ResumeRefusal.PrefixMismatch)
         remaining -= count
     }
 }
@@ -268,7 +278,8 @@ private fun handleResponseCode(
     val error =
         when {
             code == HttpURLConnection.HTTP_PARTIAL || (code == HttpURLConnection.HTTP_OK && first == 0L) -> null
-            code == HttpURLConnection.HTTP_OK || code == HTTP_RANGE_NOT_SATISFIABLE -> DownloadError.CannotResume
+            code == HttpURLConnection.HTTP_OK -> cannotResume(ResumeRefusal.RangeIgnored)
+            code == HTTP_RANGE_NOT_SATISFIABLE -> cannotResume(ResumeRefusal.RangeUnsatisfiable)
             code in ExpiredCodes -> DownloadError.Expired
             code == HTTP_TOO_MANY_REQUESTS || code >= HttpURLConnection.HTTP_INTERNAL_ERROR -> DownloadError.Transient
             else -> DownloadError.Refused
@@ -291,8 +302,6 @@ private fun transferProgress(
     val eta = if (total != null && speed != null) (total - current).coerceAtLeast(0) / speed else null
     return Progress(percent.coerceIn(0, MAX_PERCENT), speed, eta)
 }
-
-private fun cannotResume(): Nothing = throw DownloadFailure(DownloadError.CannotResume)
 
 private val RangePattern = Regex("bytes (\\d+)-(\\d+)/(\\d+)")
 private val ExpiredCodes =
