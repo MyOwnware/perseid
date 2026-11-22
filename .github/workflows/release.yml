@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable version to preview without signing or publishing
+        default: v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  dry-run:
+    name: Preview release without publishing
+    if: github.event_name == 'workflow_dispatch'
+    needs: checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/android-setup
+      - name: Build and verify unsigned arm64 APK
+        run: bash .github/scripts/preview-release-apk.sh
+      - name: Render preview release notes
+        env:
+          RELEASE_TAG: ${{ inputs.version }}
+        run: |
+          bash .github/scripts/install-git-cliff.sh "$RUNNER_TEMP/perseid-cli"
+          PATH="$RUNNER_TEMP/perseid-cli:$PATH" python3 .github/scripts/release-notes.py \
+            "$RELEASE_TAG" "$GITHUB_REPOSITORY" --dry-run >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish signed release
+    if: github.event_name == 'push' && github.repository == 'MyOwnware/perseid'
+    needs: checks
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify release tag
+        run: |
+          bash .github/scripts/verify-release-tag.sh "$GITHUB_REF_NAME" "$GITHUB_SHA"
+          test -s "docs/releases/$GITHUB_REF_NAME.md"
+      - uses: ./.github/actions/android-setup
+      - name: Build arm64 release APK
+        run: ./gradlew assembleRelease "-PperseidReleaseTag=$GITHUB_REF_NAME" --warning-mode fail
+      - name: Verify release-notes tool
+        run: bash .github/scripts/install-git-cliff.sh "$RUNNER_TEMP/perseid-cli"
+      - name: Sign APK and verify signature, alignment and checksum
+        env:
+          PERSEID_KEYSTORE_BASE64: ${{ secrets.PERSEID_KEYSTORE_BASE64 }}
+          PERSEID_KEYSTORE_PASSWORD: ${{ secrets.PERSEID_KEYSTORE_PASSWORD }}
+          PERSEID_KEY_ALIAS: ${{ secrets.PERSEID_KEY_ALIAS }}
+          PERSEID_KEY_PASSWORD: ${{ secrets.PERSEID_KEY_PASSWORD }}
+        run: |
+          bash .github/scripts/sign-release-apk.sh "$GITHUB_REF_NAME" \
+            app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/perseid-release" \
+            > "$RUNNER_TEMP/perseid-certificate-sha256"
+      - name: Render release notes
+        run: |
+          PATH="$RUNNER_TEMP/perseid-cli:$PATH" python3 .github/scripts/release-notes.py \
+            "$GITHUB_REF_NAME" "$GITHUB_REPOSITORY" \
+            --certificate "$(cat "$RUNNER_TEMP/perseid-certificate-sha256")" \
+            > "$RUNNER_TEMP/perseid-release/notes.md"
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$RUNNER_TEMP/perseid-release"
+          name="perseid-video-downloader-$GITHUB_REF_NAME-arm64.apk"
+          gh release create "$GITHUB_REF_NAME" "$name" "$name.sha256" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --title "Perseid $GITHUB_REF_NAME" --notes-file notes.md
