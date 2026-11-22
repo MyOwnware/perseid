@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import app.myownware.perseid.BuildConfig
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
@@ -147,10 +148,10 @@ private fun SettingsRows(
         )
     val app =
         listOf(
-            Setting.Engine to version,
+            Setting.Engine to settingVersion(version),
             Setting.Privacy to null,
             Setting.Licenses to null,
-            Setting.About to BuildConfig.VERSION_NAME,
+            Setting.About to settingVersion(BuildConfig.VERSION_NAME),
         )
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         SettingsGroup(R.string.settings_appearance, appearance, onOpen)
@@ -274,7 +275,7 @@ internal fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-        if (value != null) Text(value, Modifier.weight(1f, fill = false), color = secondary)
+        if (value != null) Text(value, Modifier.weight(1f), color = secondary, textAlign = TextAlign.End)
         Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = secondary)
     }
 }

@@ -7,8 +7,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.core.text.BidiFormatter
+import androidx.core.text.TextDirectionHeuristicsCompat
 import app.myownware.perseid.BuildConfig
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
@@ -39,8 +42,8 @@ internal fun AboutDialog(
             Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(DesignSize.Small),
         ) {
-            Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME))
-            Text(stringResource(R.string.engine_installed, engineVersion))
+            Text(stringResource(R.string.settings_version, settingVersion(BuildConfig.VERSION_NAME)))
+            Text(stringResource(R.string.engine_installed, settingVersion(engineVersion)))
             Text(stringResource(R.string.settings_about_license))
             SecondaryButton(stringResource(R.string.settings_about_source), onClick = { browser.openUri(REPOSITORY) })
             SecondaryButton(stringResource(R.string.settings_about_issue), onClick = {
@@ -51,3 +54,9 @@ internal fun AboutDialog(
 }
 
 private const val REPOSITORY = "https://github.com/MyOwnware/perseid"
+
+@Composable
+internal fun settingVersion(version: String): String =
+    BidiFormatter
+        .getInstance(LocalConfiguration.current.locales[0])
+        .unicodeWrap(version, TextDirectionHeuristicsCompat.LTR)
