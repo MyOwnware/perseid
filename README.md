@@ -8,14 +8,27 @@ Perseid is the first app in MyOwnware. It is planned to keep download history, p
 
 - Paste or share a public media link to preview its thumbnail, title, author and duration when available.
 - Choose Audio or Video from the available formats. Video defaults to the best available quality up to 1080p when available. Audio prefers m4a and otherwise keeps the best available audio format.
-- Planned — download in the background, pause, resume and save to Download/Perseid/.
+- Download in the background, pause and resume, and save finished files to Download/Perseid/.
 - Planned — search, play, share and delete downloads from a local library.
 - Update or restore the download engine from Settings.
 - Planned — change theme and download defaults.
 
 ## Install
 
-Signed arm64-v8a APKs for Android 10 and later will be published on [GitHub Releases](https://github.com/MyOwnware/perseid/releases). The app is in development. There is no APK yet.
+Perseid releases are for **Android 10 or later** on **arm64-v8a** devices.
+
+1. Open [GitHub Releases](https://github.com/MyOwnware/perseid/releases) and download the APK and its matching `.apk.sha256` file from the same release.
+2. Before installing, verify both files on a computer. These commands use v0.1.0 as an example. On macOS, use `shasum -a 256 -c` in place of `sha256sum -c`.
+
+   ```sh
+   sha256sum -c perseid-video-downloader-v0.1.0-arm64.apk.sha256
+   apksigner verify --print-certs perseid-video-downloader-v0.1.0-arm64.apk
+   ```
+
+   Confirm the checksum reports `OK` and compare the signer certificate SHA-256 digest with the fingerprint in the release notes. `apksigner` is part of Android SDK Build-Tools. [Android signing tool documentation](https://developer.android.com/tools/apksigner)
+3. Copy the verified APK to your phone and open it from Downloads. If Android prompts you, open **Settings**, turn on **Allow from this source** for the app opening the APK, then return and tap **Install**. You can switch the permission off after installation.
+
+Perseid checks for download-engine updates only when asked and never checks for app updates. An app such as Obtainium can track the Perseid repository on GitHub for APK updates. [Obtainium](https://obtainium.imranr.dev/)
 
 ## Build from source
 
