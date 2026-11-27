@@ -39,7 +39,7 @@ Upstream stable versions checked on 2026-11-21. These are reference versions. Ap
 | Room | Job and library records | [2.8.5](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | WorkManager | Background scheduling | [2.12.0](https://developer.android.com/jetpack/androidx/versions) | Apache-2.0 |
 | youtubedl-android | Android engine wrapper and native artifacts | [0.18.1](https://github.com/yausername/youtubedl-android/releases/tag/0.18.1) | [GPL-3.0](https://github.com/yausername/youtubedl-android/blob/0.18.1/LICENSE) |
-| yt-dlp | Extractors and transfers | [2026.10.26](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26) | Unlicense for upstream code. Bundled code has additional terms. |
+| yt-dlp | Extractors and transfers | [2026.11.23](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.11.23) | Unlicense for upstream code. Bundled code has additional terms. |
 | ktlint / detekt | Kotlin formatting and static analysis | [1.8.0](https://github.com/ktlint/ktlint/releases/tag/1.8.0) / [1.23.8](https://github.com/detekt/detekt/releases/tag/v1.23.8) | MIT / Apache-2.0 |
 
 ## Screens and local data

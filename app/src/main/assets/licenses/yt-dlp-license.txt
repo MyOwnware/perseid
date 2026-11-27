@@ -1,5 +1,5 @@
-yt-dlp 2026.10.26 and wrapper bootstrap yt-dlp
-https://github.com/yt-dlp/yt-dlp/tree/2026.10.26
+yt-dlp 2026.11.23 and wrapper bootstrap yt-dlp
+https://github.com/yt-dlp/yt-dlp/tree/2026.11.23
 
 This is free and unencumbered software released into the public domain.
 

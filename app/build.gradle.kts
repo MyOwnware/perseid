@@ -30,8 +30,8 @@ val releaseVersion =
     }
 val arm64Only = releaseVersion != null || providers.gradleProperty("perseidArm64").orNull == "true"
 
-val ytDlpVersion = "2026.10.26"
-val ytDlpSha256 = "e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3"
+val ytDlpVersion = "2026.11.23"
+val ytDlpSha256 = "e8665ed64d6b9172773e812f891fb707a0cb1ee8d9ef4fc1acb00cabee4c5256"
 val ytDlpAsset = layout.projectDirectory.file("src/main/assets/engine/yt-dlp")
 val verifyBundledEngine =
     tasks.register("verifyBundledEngine") {
