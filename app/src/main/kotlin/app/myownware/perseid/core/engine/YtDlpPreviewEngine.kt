@@ -1,6 +1,8 @@
 package app.myownware.perseid.core.engine
 
 import android.content.Context
+import android.util.Log
+import com.fasterxml.jackson.databind.JsonNode
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +21,14 @@ internal class YtDlpPreviewEngine(
     override suspend fun thumbnail(url: String) = loadThumbnail(url)
 
     override suspend fun preview(url: String): MediaPreview {
-        val metadata = runInterruptible(Dispatchers.IO) { readMetadata(extractMetadata(url)) }
+        val metadata =
+            if (isYoutubePreview(url)) {
+                val (result, client) = youtubePreviewMetadata { readMetadataFor(url, it) }
+                Log.d("PerseidPreview", "YouTube preview served by $client")
+                result
+            } else {
+                readMetadataFor(url)
+            }
         return MediaPreview(
             title = metadata.metadataText("title") ?: throw PreviewFailure(PreviewError.Unknown),
             author = metadata.metadataText("uploader") ?: metadata.metadataText("channel"),
@@ -34,10 +43,19 @@ internal class YtDlpPreviewEngine(
         )
     }
 
-    private fun extractMetadata(url: String): String {
+    private suspend fun readMetadataFor(
+        url: String,
+        client: String? = null,
+    ): JsonNode = runInterruptible(Dispatchers.IO) { readMetadata(extractMetadata(url, client)) }
+
+    private fun extractMetadata(
+        url: String,
+        client: String?,
+    ): String {
         val request =
             YoutubeDLRequest(url).apply {
                 addOption("--ignore-config")
+                if (client != null) addOption("--extractor-args", "youtube:player_client=$client")
                 addOption("--cache-dir", File(context.noBackupFilesDir, "yt-dlp-cache").absolutePath)
                 addOption("--no-plugin-dirs")
                 addOption("--no-remote-components")

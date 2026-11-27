@@ -12,6 +12,8 @@ import app.myownware.perseid.core.engine.MediaType
 import app.myownware.perseid.core.engine.PreviewEngine
 import app.myownware.perseid.core.engine.PreviewError
 import app.myownware.perseid.core.engine.PreviewFailure
+import app.myownware.perseid.core.engine.YOUTUBE_PREVIEW_EXTRA_MILLIS
+import app.myownware.perseid.core.engine.isYoutubePreview
 import app.myownware.perseid.core.preferences.Preferences
 import app.myownware.perseid.core.preferences.VideoQuality
 import kotlinx.coroutines.CancellationException
@@ -155,8 +157,9 @@ internal class DownloadViewModel(
 
     private suspend fun load(url: String) {
         try {
+            val extra = if (isYoutubePreview(url)) YOUTUBE_PREVIEW_EXTRA_MILLIS else 0
             val preview =
-                withTimeout(PREVIEW_TIMEOUT_MILLIS) {
+                withTimeout(PREVIEW_TIMEOUT_MILLIS + extra) {
                     publish(PreviewState.Preparing)
                     prepare()
                     publish(PreviewState.Loading)
