@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import app.myownware.perseid.R
 import app.myownware.perseid.core.design.DesignSize
 import app.myownware.perseid.core.design.ErrorMessage
-import app.myownware.perseid.core.design.SecondaryButton
 import app.myownware.perseid.core.engine.PreviewError
 
 @Composable
@@ -46,7 +45,7 @@ internal fun DownloadScreen(
     val state by model.state.collectAsState()
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         LinkInput(state.link, model)
-        PreviewContent(state.preview, model::requestPreview)
+        PreviewContent(state.preview)
         MediaSelection(
             state.preview as? PreviewState.Ready,
             model,
@@ -65,53 +64,43 @@ private fun LinkInput(
     val context = LocalContext.current
     val focus = LocalFocusManager.current
     val colors = MaterialTheme.colorScheme
-    val preview = {
-        focus.clearFocus()
-        model.requestPreview()
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Small)) {
-        OutlinedTextField(
-            value = link,
-            onValueChange = model::editLink,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.preview_link_label)) },
-            singleLine = true,
-            shape = MaterialTheme.shapes.small,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = colors.onSurface,
-                    focusedLabelColor = colors.onSurface,
-                ),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
-            keyboardActions = KeyboardActions(onGo = { preview() }),
-            trailingIcon = {
-                TextButton(
-                    onClick = {
-                        focus.clearFocus()
-                        val clipboard = context.getSystemService(ClipboardManager::class.java)
-                        model.paste(
-                            clipboard
-                                ?.primaryClip
-                                ?.getItemAt(0)
-                                ?.text
-                                ?.toString()
-                                .orEmpty(),
-                        )
-                    },
-                    modifier = Modifier.heightIn(min = DesignSize.TouchTarget),
-                    colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurfaceVariant),
-                ) { Text(stringResource(R.string.preview_paste)) }
-            },
-        )
-        SecondaryButton(stringResource(R.string.preview_action), preview)
-    }
+    OutlinedTextField(
+        value = link,
+        onValueChange = model::editLink,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(stringResource(R.string.preview_link_label)) },
+        singleLine = true,
+        shape = MaterialTheme.shapes.small,
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.onSurface,
+                focusedLabelColor = colors.onSurface,
+            ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
+        trailingIcon = {
+            TextButton(
+                onClick = {
+                    focus.clearFocus()
+                    val clipboard = context.getSystemService(ClipboardManager::class.java)
+                    model.paste(
+                        clipboard
+                            ?.primaryClip
+                            ?.getItemAt(0)
+                            ?.text
+                            ?.toString()
+                            .orEmpty(),
+                    )
+                },
+                modifier = Modifier.heightIn(min = DesignSize.TouchTarget),
+                colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurfaceVariant),
+            ) { Text(stringResource(R.string.preview_paste)) }
+        },
+    )
 }
 
 @Composable
-private fun PreviewContent(
-    state: PreviewState,
-    onRetry: () -> Unit,
-) {
+private fun PreviewContent(state: PreviewState) {
     when (state) {
         PreviewState.Empty -> {}
 
@@ -132,7 +121,7 @@ private fun PreviewContent(
         }
 
         is PreviewState.Failed -> {
-            PreviewProblem(state.error, onRetry)
+            PreviewProblem(state.error)
         }
     }
 }
@@ -154,10 +143,7 @@ private fun PreviewLoading(label: Int) {
 }
 
 @Composable
-private fun PreviewProblem(
-    error: PreviewError,
-    onRetry: () -> Unit,
-) {
+private fun PreviewProblem(error: PreviewError) {
     val text =
         when (error) {
             PreviewError.Offline -> R.string.preview_offline
@@ -167,9 +153,5 @@ private fun PreviewProblem(
             PreviewError.NotFound -> R.string.preview_not_found
             PreviewError.Unknown -> R.string.preview_unknown
         }
-    ErrorMessage(stringResource(text)) {
-        if (error == PreviewError.Offline || error == PreviewError.Unknown) {
-            SecondaryButton(stringResource(R.string.preview_try_again), onRetry)
-        }
-    }
+    ErrorMessage(stringResource(text)) {}
 }

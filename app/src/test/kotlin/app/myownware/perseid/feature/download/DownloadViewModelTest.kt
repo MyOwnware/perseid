@@ -14,6 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -31,17 +34,32 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun preparesOnlyAfterRequestAndShowsProgressAndMetadata() {
-        model.editLink("https://example.org/video")
-        assertEquals(PreviewState.Empty, model.state.value.preview)
-        assertEquals(0, engine.starts)
-        model.requestPreview()
+    fun preparesAfterPasteAndShowsProgressAndMetadata() {
+        model.paste("https://example.org/video")
         assertEquals(PreviewState.Preparing, model.state.value.preview)
         engine.initialized.complete(Unit)
         assertEquals(PreviewState.Loading, model.state.value.preview)
         engine.result.complete(MediaPreview("Example"))
         val expected = PreviewState.Ready(MediaPreview("Example"), "https://example.org/video")
         assertEquals(expected, model.state.value.preview)
+    }
+
+    @Test
+    fun typingLoadsTheFinalLinkAfterTheDebounce() {
+        model.editLink("https://example.org/vid")
+        model.editLink("https://example.org/video")
+        assertEquals(0, engine.starts)
+        engine.initialized.complete(Unit)
+        engine.result.complete(MediaPreview("Example"))
+
+        val ready =
+            runBlocking {
+                withTimeout(2_000) {
+                    model.state.first { it.preview is PreviewState.Ready }.preview as PreviewState.Ready
+                }
+            }
+        assertEquals("https://example.org/video", ready.url)
+        assertEquals(1, engine.starts)
     }
 
     @Test

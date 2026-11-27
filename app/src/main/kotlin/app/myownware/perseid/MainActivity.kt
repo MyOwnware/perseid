@@ -101,7 +101,6 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         engineUpdate.close()
-        if (!isChangingConfigurations) download.cancelPreview()
     }
 
     override fun onNewIntent(intent: Intent) {
