@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import app.myownware.perseid.PerseidApp
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +47,7 @@ internal class DownloadJobService : JobService() {
     }
 
     override fun onStopJob(params: JobParameters): Boolean {
+        Log.i(DOWNLOAD_TAG, "Transfer job stopped with reason ${params.stopReason}")
         val offline = params.stopReason == JobParameters.STOP_REASON_CONSTRAINT_CONNECTIVITY
         val active = transfer
         if (active?.id == params.jobId) {

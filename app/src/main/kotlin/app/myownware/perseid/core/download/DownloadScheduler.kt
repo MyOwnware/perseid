@@ -5,12 +5,14 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -19,14 +21,27 @@ internal interface DownloadScheduler {
     fun pending(): Boolean
 
     fun schedule(): Boolean
+
+    fun finishing(id: Int) {}
 }
 
 internal fun downloadScheduler(context: Context): DownloadScheduler =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        DataTransferScheduler(context)
+        FallbackDownloadScheduler(DataTransferScheduler(context), WorkDownloadScheduler(context))
     } else {
         WorkDownloadScheduler(context)
     }
+
+internal class FallbackDownloadScheduler(
+    private val transfer: DownloadScheduler,
+    private val work: DownloadScheduler,
+) : DownloadScheduler {
+    override fun pending(): Boolean = transfer.pending() || work.pending()
+
+    override fun schedule(): Boolean = (!work.pending() && transfer.schedule()) || work.schedule()
+
+    override fun finishing(id: Int) = transfer.finishing(id)
+}
 
 private class WorkDownloadScheduler(
     context: Context,
@@ -40,7 +55,11 @@ private class WorkDownloadScheduler(
             OneTimeWorkRequestBuilder<DownloadWorker>()
                 .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
-                .build()
+                .apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                    }
+                }.build()
         return try {
             manager.enqueueUniqueWork(QUEUE, ExistingWorkPolicy.APPEND_OR_REPLACE, request).result.get()
             true
@@ -69,20 +88,25 @@ internal class DataTransferScheduler(
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .build()
         return try {
-            manager.schedule(job) == JobScheduler.RESULT_SUCCESS
-        } catch (_: IllegalStateException) {
+            val accepted = manager.schedule(job) == JobScheduler.RESULT_SUCCESS
+            if (!accepted) Log.w(DOWNLOAD_TAG, "JobScheduler rejected the transfer job")
+            accepted
+        } catch (failure: IllegalStateException) {
+            Log.w(DOWNLOAD_TAG, "JobScheduler could not schedule the transfer job", failure)
             false
-        } catch (_: SecurityException) {
+        } catch (failure: SecurityException) {
+            Log.w(DOWNLOAD_TAG, "JobScheduler refused the transfer job", failure)
             false
         }
     }
 
-    fun finishing(id: Int) {
+    override fun finishing(id: Int) {
         // JobScheduler can still report the completed job while it processes jobFinished.
         finishedId = id
     }
 }
 
+internal const val DOWNLOAD_TAG = "PerseidDownload"
 private const val QUEUE = "perseid.downloads"
 private const val BACKOFF_SECONDS = 10L
 internal const val FIRST_TRANSFER_JOB_ID = 10_000

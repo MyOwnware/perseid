@@ -2,7 +2,6 @@ package app.myownware.perseid.core.download
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.Build
 import androidx.core.graphics.scale
 import androidx.room.withTransaction
 import app.myownware.perseid.core.engine.DownloadRequest
@@ -115,7 +114,7 @@ internal class DownloadCoordinator(
         scheduling.withLock {
             val job = queue.first().firstOrNull { it.state in RecoverableStates }
             if (job == null) {
-                scheduler.finishing(jobId)
+                if (jobId != null) scheduler.finishing(jobId)
                 finished()
             }
             job
@@ -129,7 +128,7 @@ internal class DownloadCoordinator(
             if (lostConnection) {
                 dao.transitionQueue(setOf(JobState.Downloading, JobState.Merging), JobState.Waiting)
             } else {
-                scheduler.finishing(jobId)
+                if (jobId != null) scheduler.finishing(jobId)
                 pauseForAndroid(dao, notifications)
             }
         }
@@ -167,12 +166,6 @@ private suspend fun pauseForAndroid(
     notifications: DownloadNotifications,
 ) {
     if (dao.transitionQueue(RecoverableStates, JobState.AndroidPaused) > 0) notifications.androidPaused()
-}
-
-private fun DownloadScheduler.finishing(jobId: Int?) {
-    if (jobId != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        (this as DataTransferScheduler).finishing(jobId)
-    }
 }
 
 internal suspend fun settleInterruptedActions(
