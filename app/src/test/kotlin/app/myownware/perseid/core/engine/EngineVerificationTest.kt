@@ -14,7 +14,7 @@ class EngineVerificationTest {
     @Test
     fun authenticReleaseMatchesTheArchive() {
         val expected = verifiedEngineChecksum(checksums, signature, key)
-        verifyEngineArchive(File(artifacts, "yt-dlp"), expected, "2026.10.26")
+        verifyEngineArchive(File(artifacts, "yt-dlp"), expected, "2026.11.23")
     }
 
     @Test
@@ -27,8 +27,8 @@ class EngineVerificationTest {
     fun wrongChecksumAndReplayUnderAnotherVersionAreRejected() {
         val asset = File(artifacts, "yt-dlp")
         val expected = verifiedEngineChecksum(checksums, signature, key)
-        assertVerificationFailure { verifyEngineArchive(asset, "0".repeat(expected.length), "2026.10.26") }
-        assertVerificationFailure { verifyEngineArchive(asset, expected, "2026.10.27") }
+        assertVerificationFailure { verifyEngineArchive(asset, "0".repeat(expected.length), "2026.11.23") }
+        assertVerificationFailure { verifyEngineArchive(asset, expected, "2026.11.24") }
     }
 
     private fun fixture(name: String): ByteArray {

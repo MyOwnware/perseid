@@ -16,15 +16,16 @@ The manual updater verifies the detached signature with Bouncy Castle OpenPGP 1.
 
 ## Prepare a release
 
-1. Open a release PR titled `chore(release): vX.Y.Z`. Generate `CHANGELOG.md` from commits using the pinned git-cliff version.
+1. Bump bundled yt-dlp to the latest stable before every release.
+2. Open a release PR titled `chore(release): vX.Y.Z`. Generate `CHANGELOG.md` from commits using the pinned git-cliff version.
 
    ```sh
    bash .github/scripts/install-git-cliff.sh /tmp/perseid-release-tools
    /tmp/perseid-release-tools/git-cliff --config cliff.toml --tag v0.1.0 --output CHANGELOG.md
    ```
 
-2. Add `docs/releases/vX.Y.Z.md` with a short title on a Markdown heading line (`# Short title`), then two or three sentences on what changed for users. Run a preview and review the generated notes before merging the PR.
-3. After the release PR is merged, the owner creates and pushes a signed annotated tag on `main` using the release key pinned in `.github/keys/release-signing.asc`. The workflow runs the existing Android checks and verifies the tag before signing or publishing. Keep minor and patch numbers below 100 so the Android version code stays unique. Development builds use `0.0.0-dev`.
+3. Add `docs/releases/vX.Y.Z.md` with a short title on a Markdown heading line (`# Short title`), then two or three sentences on what changed for users. Run a preview and review the generated notes before merging the PR.
+4. After the release PR is merged, the owner creates and pushes a signed annotated tag on `main` using the release key pinned in `.github/keys/release-signing.asc`. The workflow runs the existing Android checks and verifies the tag before signing or publishing. Keep minor and patch numbers below 100 so the Android version code stays unique. Development builds use `0.0.0-dev`.
 
 The **Release** workflow's **Run workflow** button previews a version on a fork or branch without signing or publishing. The workflow must exist on the repository's default branch before GitHub can offer it for manual runs. The published APK certificate fingerprint is read from the signed APK and is separate from the Git tag signing key.
 

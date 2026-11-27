@@ -6,10 +6,10 @@ Corresponding wrapper source and license:
 https://github.com/yausername/youtubedl-android/tree/0.18.1
 https://github.com/yausername/youtubedl-android/blob/0.18.1/LICENSE
 
-yt-dlp 2026.10.26, official Unix zipimport release
+yt-dlp 2026.11.23, official Unix zipimport release
 Unlicense for yt-dlp upstream code. Third-party notices are in yt-dlp-third-party.txt.
-https://github.com/yt-dlp/yt-dlp/tree/2026.10.26
-https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26
+https://github.com/yt-dlp/yt-dlp/tree/2026.11.23
+https://github.com/yt-dlp/yt-dlp/releases/tag/2026.11.23
 
 yt-dlp-ejs 0.8.0, bundled by the official yt-dlp release
 https://github.com/yt-dlp/ejs/tree/0.8.0
