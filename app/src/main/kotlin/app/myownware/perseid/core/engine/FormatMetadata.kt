@@ -12,7 +12,7 @@ internal fun JsonNode.mediaOptions(): MediaOptions {
     return mapMediaFormats(formats.mapNotNull { it.toStreamFormat() })
 }
 
-private fun JsonNode.toStreamFormat(): StreamFormat? {
+internal fun JsonNode.toStreamFormat(): StreamFormat? {
     val id = path("format_id").asText("").takeIf { it.isNotBlank() } ?: return null
     val exactBytes = positiveLong("filesize")
     val estimate = positiveLong("filesize_approx")
