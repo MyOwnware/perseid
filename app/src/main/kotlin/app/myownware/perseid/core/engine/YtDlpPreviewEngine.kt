@@ -15,15 +15,15 @@ internal class YtDlpPreviewEngine(
         runInterruptible(Dispatchers.IO) { BundledEngine.prepare(context) }
     }
 
+    override suspend fun thumbnail(url: String) = loadThumbnail(url)
+
     override suspend fun preview(url: String): MediaPreview {
         val metadata = runInterruptible(Dispatchers.IO) { readMetadata(extractMetadata(url)) }
-        val thumbnailUrl = metadata.metadataText("thumbnail")
         return MediaPreview(
             title = metadata.metadataText("title") ?: throw PreviewFailure(PreviewError.Unknown),
             author = metadata.metadataText("uploader") ?: metadata.metadataText("channel"),
             durationSeconds = metadata.path("duration").asLong(-1).takeIf { it >= 0 },
-            thumbnail = thumbnailUrl?.let { loadThumbnail(it) },
-            thumbnailUrl = thumbnailUrl,
+            thumbnailUrl = metadata.metadataText("thumbnail"),
             options =
                 if (metadata.metadataText("extractor_key") == "Generic" && URI.create(url).rawQuery != null) {
                     MediaOptions()

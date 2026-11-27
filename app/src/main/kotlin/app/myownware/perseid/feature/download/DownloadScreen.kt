@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ internal fun DownloadScreen(
     snackbars: SnackbarHostState,
 ) {
     val state by model.state.collectAsState()
+    LaunchedEffect(model) { model.warmUp() }
     Column(verticalArrangement = Arrangement.spacedBy(DesignSize.Section)) {
         LinkInput(state.link, model)
         PreviewContent(state.preview)
