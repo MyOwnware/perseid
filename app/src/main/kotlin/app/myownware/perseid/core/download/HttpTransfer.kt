@@ -4,17 +4,9 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
-import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.Properties
-
-internal data class HttpSource(
-    val url: URL,
-    val length: Long?,
-    val identity: String,
-    val headers: Map<String, String> = emptyMap(),
-)
 
 private data class RangeReply(
     val last: Long,
@@ -197,15 +189,8 @@ internal class HttpTransfer(
         block: (HttpURLConnection) -> T,
     ): T {
         checkInterrupted()
-        val connection = source.url.openConnection() as HttpURLConnection
+        val connection = source.connect(first, last, etag)
         try {
-            connection.connectTimeout = TIMEOUT
-            connection.readTimeout = TIMEOUT
-            connection.useCaches = false
-            source.headers.forEach(connection::setRequestProperty)
-            connection.setRequestProperty("Accept-Encoding", "identity")
-            connection.setRequestProperty("Range", "bytes=$first-$last")
-            etag?.let { connection.setRequestProperty("If-Range", it) }
             handleResponseCode(connection.responseCode, first)
             val encoding = connection.getHeaderField("Content-Encoding")
             if (encoding != null && !encoding.equals("identity", ignoreCase = true)) {
@@ -313,6 +298,5 @@ private class RangeWidthRefused : IOException()
 
 private const val SMALL_CHUNK_SIZE = 1024L * 1024
 private const val CHUNK_SIZE = 8L * 1024 * 1024
-private const val TIMEOUT = 15_000
 private const val PROGRESS_INTERVAL_NS = 500_000_000L
 private const val NANOS_PER_SECOND = 1_000_000_000.0
