@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import java.io.File
 import java.io.IOException
-import java.net.URI
 import java.util.Locale
 
 internal data class Progress(
@@ -115,21 +114,6 @@ private fun resolveTrack(
     return ResolvedTrack(extension, http)
 }
 
-private fun JsonNode.httpSource(metadata: JsonNode): HttpSource {
-    val uri = metadataText("url")?.let(URI::create)
-    if (uri?.scheme !in setOf("http", "https")) throw DownloadFailure(DownloadError.Refused)
-    val url = requireNotNull(uri).toURL()
-    val headers = path("http_headers").properties().filter { (name, _) -> name in ForwardHeaders }
-    val sourceId = metadata.metadataText("id")
-    val identity = listOf(metadata.metadataText("extractor_key"), sourceId, metadataText("format_id"))
-    return HttpSource(
-        url,
-        path("filesize").asLong(-1).takeIf { it > 0 },
-        identity.joinToString("|"),
-        headers.associate { (name, value) -> name to value.asText() },
-    )
-}
-
 private fun checkPartial(
     output: File,
     staged: Boolean,
@@ -157,8 +141,6 @@ private fun completedTrack(
     directory.listFiles().orEmpty().singleOrNull {
         it.isFile && it.length() > 0 && it.nameWithoutExtension == "track-$index" && it.extension in MediaExtensions
     }
-
-private val ForwardHeaders = setOf("User-Agent", "Accept", "Accept-Language", "Referer", "Origin")
 
 private fun transferRequest(
     url: String,
