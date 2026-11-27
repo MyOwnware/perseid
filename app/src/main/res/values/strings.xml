@@ -38,7 +38,6 @@
   <string name="download_progress_details">%1$s · %2$s</string>
   <string name="preview_link_label">Lien du média</string>
   <string name="preview_paste">Coller</string>
-  <string name="preview_action">Aperçu</string>
   <string name="preview_preparing">Préparation du moteur…</string>
   <string name="preview_loading">Chargement de l’aperçu…</string>
   <string name="preview_invalid">Saisissez un lien commençant par http:// ou https://.</string>

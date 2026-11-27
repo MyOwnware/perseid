@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -96,14 +97,11 @@ internal class DownloadViewModel(
     }
 
     fun editLink(link: String) {
-        if (link == state.value.link) return
-        request?.cancel()
-        mutableState.value = state.value.copy(link = link, preview = PreviewState.Empty)
+        if (link != state.value.link) updateLink(link, TYPING_DEBOUNCE_MILLIS)
     }
 
     fun paste(text: String) {
-        editLink(firstSharedLink(text) ?: text)
-        requestPreview()
+        updateLink(firstSharedLink(text) ?: text, 0)
     }
 
     fun share(text: String?) {
@@ -111,10 +109,19 @@ internal class DownloadViewModel(
         if (text != null) paste(text)
     }
 
-    fun cancelPreview() {
-        if (request?.isActive != true) return
+    private fun updateLink(
+        link: String,
+        debounceMillis: Long,
+    ) {
         request?.cancel()
-        publish(PreviewState.Empty)
+        mutableState.update { it.copy(link = link, preview = PreviewState.Empty) }
+        if (link.isBlank()) return
+        request =
+            (scope ?: viewModelScope).launch {
+                delay(debounceMillis)
+                val url = validatedLink(link)
+                if (url == null) publish(PreviewState.Invalid) else load(url)
+            }
     }
 
     fun selectType(type: MediaType) {
@@ -133,17 +140,6 @@ internal class DownloadViewModel(
         if (ready.type == MediaType.Video && index in ready.media.options.video.indices) {
             publish(ready.copy(videoIndex = index))
         }
-    }
-
-    fun requestPreview() {
-        request?.cancel()
-        val url = validatedLink(state.value.link)
-        if (url == null) {
-            publish(PreviewState.Invalid)
-            return
-        }
-        publish(PreviewState.Loading)
-        request = (scope ?: viewModelScope).launch { load(url) }
     }
 
     private suspend fun load(url: String) {
@@ -176,6 +172,7 @@ internal class DownloadViewModel(
     }
 
     private companion object {
+        const val TYPING_DEBOUNCE_MILLIS = 250L
         const val PREVIEW_TIMEOUT_MILLIS = 30_000L
     }
 }

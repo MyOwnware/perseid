@@ -38,7 +38,6 @@
   <string name="download_progress_details">%1$s · %2$s</string>
   <string name="preview_link_label">رابط الوسائط</string>
   <string name="preview_paste">لصق</string>
-  <string name="preview_action">معاينة</string>
   <string name="preview_preparing">جارٍ تجهيز المحرك…</string>
   <string name="preview_loading">جارٍ تحميل المعاينة…</string>
   <string name="preview_invalid">أدخل رابطًا يبدأ بـ http:// أو https://.</string>
