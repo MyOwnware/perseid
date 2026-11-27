@@ -1,6 +1,38 @@
 # Changelog
 
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.3.1] - 2026-11-27
+
+
+### New
+
+- preview links automatically
+
+
+### Improvements
+
+- warm the engine and show metadata first
+
+- keep the preview cache in app storage
+
+- prefer visionos for youtube previews
+
+
+### Fixes
+
+- fall back when transfer scheduling fails
+
+- forward scoped media request cookies
+
+
+### Under the hood
+
+- bundle yt-dlp 2026.11.23
+
+- update wrapper to 9.9.3
+
+- let dependabot report available updates
+
 ## [0.3.0] - 2026-11-22
 
 
