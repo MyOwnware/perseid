@@ -1,5 +1,6 @@
 package app.myownware.perseid.feature.download
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.myownware.perseid.core.download.DownloadCoordinator
@@ -22,6 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
 internal data class DownloadUiState(
@@ -85,6 +88,7 @@ internal class DownloadViewModel(
     val state = mutableState.asStateFlow()
 
     private var request: Job? = null
+    private val preparing = Mutex()
     private var prepared = false
     val controls = DownloadControls(downloads) { scope ?: viewModelScope }
 
@@ -142,10 +146,26 @@ internal class DownloadViewModel(
         }
     }
 
+    suspend fun warmUp() {
+        runCatching { prepare() }.onFailure { failure ->
+            if (failure !is Exception || failure is CancellationException) throw failure
+            Log.w("PerseidPreview", "Local engine preparation failed", failure)
+        }
+    }
+
     private suspend fun load(url: String) {
         try {
-            val preview = withTimeout(PREVIEW_TIMEOUT_MILLIS) { fetch(url) }
+            val preview =
+                withTimeout(PREVIEW_TIMEOUT_MILLIS) {
+                    publish(PreviewState.Preparing)
+                    prepare()
+                    publish(PreviewState.Loading)
+                    engine.preview(url)
+                }
             publish(initialPreview(preview, url, preferences()))
+            val thumbnail = preview.thumbnailUrl?.let { engine.thumbnail(it) } ?: return
+            val ready = state.value.preview as? PreviewState.Ready ?: return
+            if (ready.url == url) publish(ready.copy(media = ready.media.copy(thumbnail = thumbnail)))
         } catch (_: TimeoutCancellationException) {
             publish(PreviewState.Failed(PreviewError.Unknown))
         } catch (cancelled: CancellationException) {
@@ -157,14 +177,12 @@ internal class DownloadViewModel(
         }
     }
 
-    private suspend fun fetch(url: String): MediaPreview {
-        if (!prepared) {
-            publish(PreviewState.Preparing)
+    private suspend fun prepare() {
+        preparing.withLock {
+            if (prepared) return
             engine.prepare()
             prepared = true
         }
-        publish(PreviewState.Loading)
-        return engine.preview(url)
     }
 
     private fun publish(preview: PreviewState) {

@@ -6,6 +6,8 @@ internal interface PreviewEngine {
     suspend fun prepare()
 
     suspend fun preview(url: String): MediaPreview
+
+    suspend fun thumbnail(url: String): Bitmap?
 }
 
 internal data class MediaPreview(

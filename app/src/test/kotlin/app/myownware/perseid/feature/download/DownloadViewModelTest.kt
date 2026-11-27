@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
@@ -42,6 +43,20 @@ class DownloadViewModelTest {
         engine.result.complete(MediaPreview("Example"))
         val expected = PreviewState.Ready(MediaPreview("Example"), "https://example.org/video")
         assertEquals(expected, model.state.value.preview)
+    }
+
+    @Test
+    fun warmingUpLocallySharesPreparationWithTheFirstPreview() {
+        scope.launch { model.warmUp() }
+        assertEquals(PreviewState.Empty, model.state.value.preview)
+        model.paste("https://example.org/video")
+        assertEquals(1, engine.starts)
+
+        engine.initialized.complete(Unit)
+        engine.result.complete(MediaPreview("Example"))
+
+        assertTrue(model.state.value.preview is PreviewState.Ready)
+        assertEquals(1, engine.starts)
     }
 
     @Test
@@ -168,6 +183,8 @@ class DownloadViewModelTest {
             starts++
             initialized.await()
         }
+
+        override suspend fun thumbnail(url: String) = null
 
         override suspend fun preview(url: String): MediaPreview =
             try {
