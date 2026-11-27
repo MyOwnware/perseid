@@ -5,6 +5,7 @@ import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import java.io.File
 import java.net.URI
 import java.util.UUID
 
@@ -37,6 +38,7 @@ internal class YtDlpPreviewEngine(
         val request =
             YoutubeDLRequest(url).apply {
                 addOption("--ignore-config")
+                addOption("--cache-dir", File(context.noBackupFilesDir, "yt-dlp-cache").absolutePath)
                 addOption("--no-plugin-dirs")
                 addOption("--no-remote-components")
                 addOption("--no-update")
