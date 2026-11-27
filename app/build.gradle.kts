@@ -88,6 +88,8 @@ android {
     lint {
         abortOnError = true
         warningsAsErrors = true
+        // Dependabot handles updates.
+        disable += setOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
 
     packaging {
